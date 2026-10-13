@@ -37,14 +37,33 @@ Content-Type: application/json
   "clienteTelefone": "48988880000"
 }
 
+### ---- Daqui para baixo precisa de login ----
+
+### Entrar no painel (rode esta antes das próximas)
+# @name login
+POST {{api}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@agendamento.local",
+  "senha": "admin123"
+}
+
+### Agenda do dia (equipe toda)
+GET {{api}}/agendamentos?data=2026-10-19
+Authorization: Bearer {{login.response.body.token}}
+
 ### Agenda da Ana no dia
 GET {{api}}/agendamentos?profissionalId=1&data=2026-10-19
+Authorization: Bearer {{login.response.body.token}}
 
 ### Cancelar o agendamento 1
 PATCH {{api}}/agendamentos/1/cancelar
+Authorization: Bearer {{login.response.body.token}}
 
 ### Cadastrar um serviço
 POST {{api}}/servicos
+Authorization: Bearer {{login.response.body.token}}
 Content-Type: application/json
 
 {

@@ -30,6 +30,11 @@ public class TratadorDeErros {
         return problema(HttpStatus.UNPROCESSABLE_ENTITY, "Regra de negócio", e.getMessage());
     }
 
+    @ExceptionHandler(CredenciaisInvalidasException.class)
+    public ProblemDetail credenciais(CredenciaisInvalidasException e) {
+        return problema(HttpStatus.UNAUTHORIZED, "Login inválido", e.getMessage());
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ProblemDetail validacao(MethodArgumentNotValidException e) {
         Map<String, String> campos = new LinkedHashMap<>();

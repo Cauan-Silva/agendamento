@@ -181,6 +181,10 @@ export default function App() {
             )}
           </>
         )}
+
+        <p className="rodape">
+          <a href="#/painel">Área da equipe</a>
+        </p>
       </main>
     </div>
   )

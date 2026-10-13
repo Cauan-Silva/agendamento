@@ -8,6 +8,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -36,6 +37,7 @@ public final class AgendamentoDtos {
                                       String profissionalNome,
                                       Long servicoId,
                                       String servicoNome,
+                                      BigDecimal valor,
                                       String clienteNome,
                                       String clienteTelefone,
                                       LocalDateTime inicio,
@@ -49,6 +51,7 @@ public final class AgendamentoDtos {
                     a.getProfissional().getNome(),
                     a.getServico().getId(),
                     a.getServico().getNome(),
+                    a.getServico().getPreco(),
                     a.getClienteNome(),
                     a.getClienteTelefone(),
                     a.getInicio(),

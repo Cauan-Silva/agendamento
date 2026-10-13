@@ -88,11 +88,15 @@ public class AgendamentoService {
         return AgendamentoResponse.de(obter(id));
     }
 
+    /** Agenda do dia; sem profissionalId, traz a equipe inteira. */
     @Transactional(readOnly = true)
     public List<AgendamentoResponse> listarDoDia(Long profissionalId, LocalDate data) {
-        return repository.findByProfissionalIdAndInicioBetweenOrderByInicio(
-                        profissionalId, data.atStartOfDay(), data.atTime(23, 59, 59))
-                .stream().map(AgendamentoResponse::de).toList();
+        LocalDateTime de = data.atStartOfDay();
+        LocalDateTime ate = data.atTime(23, 59, 59);
+        List<Agendamento> agendamentos = profissionalId == null
+                ? repository.findByInicioBetweenOrderByInicio(de, ate)
+                : repository.findByProfissionalIdAndInicioBetweenOrderByInicio(profissionalId, de, ate);
+        return agendamentos.stream().map(AgendamentoResponse::de).toList();
     }
 
     @Transactional

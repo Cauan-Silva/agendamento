@@ -1,0 +1,5 @@
+# Usado com: mvn spring-boot:run -Dspring-boot.run.profiles=docker
+# Aponta para o PostgreSQL do docker-compose.yml (porta 5433 no seu computador).
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5433/agendamento

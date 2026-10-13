@@ -2,6 +2,8 @@ spring:
   application:
     name: agendamento-api
   datasource:
+    # Padrão: PostgreSQL instalado na máquina, porta 5432.
+    # Com Docker, rode com o perfil "docker" (porta 5433). Em produção, use as variáveis de ambiente.
     url: ${DB_URL:jdbc:postgresql://localhost:5432/agendamento}
     username: ${DB_USER:agendamento}
     password: ${DB_PASSWORD:agendamento}
@@ -9,19 +11,26 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: validate   # quem cria/altera tabelas é o Flyway
-    properties:
-      hibernate:
-        format_sql: true
   flyway:
     enabled: true
 
 server:
-  port: 8080
+  port: ${PORT:8080}
 
 agenda:
   fuso-horario: America/Sao_Paulo
   intervalo-minutos: 30
-  cors-origens: http://localhost:5173
+  # Endereços do front-end que podem chamar a API (separe vários com vírgula)
+  cors-origens: ${CORS_ORIGENS:http://localhost:5173}
+  jwt:
+    # Em produção, defina JWT_SEGREDO com pelo menos 32 caracteres aleatórios.
+    segredo: ${JWT_SEGREDO:segredo-de-desenvolvimento-troque-em-producao-123}
+    validade-horas: 12
+  admin:
+    # Usuário criado automaticamente se ainda não existir nenhum.
+    nome: ${ADMIN_NOME:Dono}
+    email: ${ADMIN_EMAIL:admin@agendamento.local}
+    senha: ${ADMIN_SENHA:admin123}
 
 springdoc:
   swagger-ui:

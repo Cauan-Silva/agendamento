@@ -49,10 +49,13 @@ public class AgendamentoController {
         return agendamentoService.criar(req);
     }
 
-    /** Agenda de um profissional em um dia. Ex.: GET /api/agendamentos?profissionalId=1&data=2026-10-20 */
+    /**
+     * Agenda do dia (requer login). Ex.: GET /api/agendamentos?data=2026-10-20
+     * Use profissionalId para filtrar por uma pessoa da equipe.
+     */
     @GetMapping("/agendamentos")
     public List<AgendamentoResponse> listar(
-            @RequestParam Long profissionalId,
+            @RequestParam(required = false) Long profissionalId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate data) {
         return agendamentoService.listarDoDia(profissionalId, data);
     }

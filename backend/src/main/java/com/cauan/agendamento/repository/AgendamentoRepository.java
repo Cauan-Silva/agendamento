@@ -28,6 +28,8 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> 
                                      @Param("fim") LocalDateTime fim,
                                      @Param("ignorar") StatusAgendamento ignorar);
 
+    List<Agendamento> findByInicioBetweenOrderByInicio(LocalDateTime de, LocalDateTime ate);
+
     List<Agendamento> findByProfissionalIdAndInicioBetweenOrderByInicio(Long profissionalId,
                                                                         LocalDateTime de,
                                                                         LocalDateTime ate);

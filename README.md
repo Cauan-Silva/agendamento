@@ -1,44 +1,63 @@
 # Agendamento para pequenos negócios
 
-API para barbearias, salões, clínicas e outros negócios que trabalham com hora marcada. O cliente escolhe o serviço, o profissional e o dia, e a API mostra só os horários realmente livres, impedindo que duas pessoas reservem o mesmo horário.
+Sistema de hora marcada para barbearias, salões, clínicas e outros negócios pequenos. O cliente escolhe o serviço, o profissional e o dia, vê só os horários realmente livres e recebe um comprovante. A equipe entra num painel para ver a agenda do dia e marcar atendimentos como concluídos ou cancelados.
+
+<!-- Depois de publicar, troque pelo seu link: -->
+<!-- **Ver online:** https://agendamento-xxxx.vercel.app (a API gratuita pode levar ~1 minuto para acordar no primeiro acesso) -->
+
+![Comprovante de agendamento](docs/comprovante.png)
+
+## O que tem aqui
+
+- **Página do cliente:** serviço → profissional → dia → horário → nome e celular → comprovante
+- **Painel da equipe** (`#/painel`): login, agenda do dia por profissional, total previsto, concluir e cancelar, link direto para o WhatsApp do cliente
+- **Sem horário duplicado:** a API recalcula a disponibilidade e trava o profissional no banco ao agendar; se duas pessoas tentam o mesmo horário, a segunda recebe `409` e a tela oferece outro horário
 
 ## Tecnologias
 
-- **Back-end:** Java 21 e Spring Boot 3.5 (Web, Data JPA, Validation)
+- **Back-end:** Java 21, Spring Boot 3.5 (Web, Data JPA, Validation, Security), JWT
 - **Front-end:** React 19 com Vite
-- PostgreSQL com migrações via Flyway
-- Docker Compose para o banco
-- Swagger/OpenAPI para documentação
-- JUnit 5, Mockito e AssertJ nos testes
+- **Banco:** PostgreSQL, com migrações via Flyway
+- **Qualidade:** JUnit 5, Mockito e AssertJ; documentação com Swagger/OpenAPI
+- **Deploy:** Docker, Render (API), Neon (banco) e Vercel (front-end)
 
-## Como rodar
+## Como rodar no seu computador
 
-Pré-requisitos: JDK 21, Maven e Docker.
+Pré-requisitos: JDK 21, Maven, Node.js e PostgreSQL (instalado ou via Docker).
 
-```bash
-# 1. Subir o banco
-docker compose up -d
+### 1. Banco de dados
 
-# 2. Rodar a API
-cd backend
-mvn spring-boot:run
+**Com PostgreSQL instalado** (porta 5432), crie o usuário e o banco uma vez:
+```sql
+CREATE USER agendamento WITH PASSWORD 'agendamento';
+CREATE DATABASE agendamento OWNER agendamento;
 ```
 
-A API sobe em `http://localhost:8080` e a documentação interativa fica em `http://localhost:8080/swagger-ui.html`.
+**Ou com Docker** (porta 5433):
+```bash
+docker compose up -d
+```
 
-O banco já vem com dados de exemplo (3 serviços e 2 profissionais) para você testar na hora. O arquivo `backend/requests.http` tem requisições prontas para usar com a extensão REST Client do VS Code.
+### 2. API
 
-### Front-end
+```bash
+cd backend
+mvn spring-boot:run                                  # PostgreSQL instalado
+mvn spring-boot:run -Dspring-boot.run.profiles=docker  # banco do Docker
+```
 
-Com a API rodando, em outro terminal:
+A API sobe em `http://localhost:8080`; a documentação interativa fica em `http://localhost:8080/swagger-ui.html`. As tabelas e alguns dados de exemplo (3 serviços e 2 profissionais) são criados automaticamente.
 
+### 3. Front-end
+
+Em outro terminal:
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-Abra `http://localhost:5173`. O cliente escolhe serviço, profissional, dia e horário, informa nome e celular e recebe um comprovante com o número do agendamento. Para mudar o endereço da API ou o nome do negócio, copie `frontend/.env.example` para `frontend/.env` e ajuste.
+Abra `http://localhost:5173`. O painel fica em `http://localhost:5173/#/painel`, com o login padrão de desenvolvimento **admin@agendamento.local / admin123** (troque com `ADMIN_EMAIL` e `ADMIN_SENHA`).
 
 ### Testes
 
@@ -49,24 +68,20 @@ mvn test
 
 ## Endpoints
 
-| Método | Rota | Descrição |
-|---|---|---|
-| GET | `/api/servicos` | Lista serviços ativos |
-| POST | `/api/servicos` | Cadastra serviço |
-| PUT | `/api/servicos/{id}` | Atualiza serviço |
-| DELETE | `/api/servicos/{id}` | Desativa serviço |
-| GET | `/api/profissionais` | Lista profissionais ativos |
-| POST | `/api/profissionais` | Cadastra profissional |
-| PUT | `/api/profissionais/{id}` | Atualiza profissional |
-| DELETE | `/api/profissionais/{id}` | Desativa profissional |
-| GET | `/api/disponibilidade?profissionalId=&servicoId=&data=` | Horários livres no dia |
-| POST | `/api/agendamentos` | Cria agendamento |
-| GET | `/api/agendamentos?profissionalId=&data=` | Agenda do profissional no dia |
-| GET | `/api/agendamentos/{id}` | Detalha agendamento |
-| PATCH | `/api/agendamentos/{id}/cancelar` | Cancela |
-| PATCH | `/api/agendamentos/{id}/concluir` | Marca como concluído |
+| Método | Rota | Acesso | Descrição |
+|---|---|---|---|
+| POST | `/api/auth/login` | público | Devolve o token JWT do painel |
+| GET | `/api/servicos` | público | Lista serviços ativos |
+| GET | `/api/profissionais` | público | Lista profissionais ativos |
+| GET | `/api/disponibilidade?profissionalId=&servicoId=&data=` | público | Horários livres no dia |
+| POST | `/api/agendamentos` | público | Cria agendamento |
+| GET | `/api/agendamentos?data=&profissionalId=` | equipe | Agenda do dia (profissional opcional) |
+| GET | `/api/agendamentos/{id}` | equipe | Detalha agendamento |
+| PATCH | `/api/agendamentos/{id}/cancelar` | equipe | Cancela |
+| PATCH | `/api/agendamentos/{id}/concluir` | equipe | Marca como concluído |
+| POST/PUT/DELETE | `/api/servicos`, `/api/profissionais` | equipe | Cadastro (DELETE desativa) |
 
-Erros seguem o padrão RFC 7807 (`application/problem+json`): 400 para dados inválidos, 404 para recurso inexistente, 409 para horário já ocupado e 422 para regras de negócio (fora do expediente, dia de folga etc.).
+Rotas da equipe exigem `Authorization: Bearer <token>`. Erros seguem o padrão RFC 7807 (`application/problem+json`): 400 dados inválidos, 401 sem login, 404 não encontrado, 409 horário ocupado, 422 regra de negócio (fora do expediente, dia de folga etc.).
 
 ## Como funciona a disponibilidade
 
@@ -77,25 +92,35 @@ Para um profissional, um serviço e um dia, a API:
 3. Remove os horários que já passaram.
 4. Remove os horários que se sobrepõem a agendamentos não cancelados.
 
-Ao criar um agendamento, as regras são verificadas de novo no servidor. Para evitar que dois clientes reservem o mesmo horário ao mesmo tempo, a linha do profissional é bloqueada no banco (`SELECT ... FOR UPDATE`) durante a transação: a segunda requisição espera a primeira terminar e então recebe `409 Conflict`.
+Ao criar um agendamento, tudo é verificado de novo no servidor, e a linha do profissional é bloqueada no banco (`SELECT ... FOR UPDATE`) durante a transação: a segunda requisição simultânea espera a primeira terminar e então recebe `409 Conflict`.
 
 ## Estrutura
 
 ```
 backend/src/main/java/com/cauan/agendamento/
-├── config/       # relógio, CORS
+├── config/       # relógio, CORS, Swagger
 ├── controller/   # rotas REST
 ├── dto/          # objetos de entrada e saída
 ├── exception/    # exceções e tratamento de erros
 ├── model/        # entidades JPA
 ├── repository/   # acesso ao banco
+├── security/     # login, JWT, regras de acesso
 └── service/      # regras de negócio
+
+frontend/src/
+├── components/   # etapas do agendamento do cliente
+├── painel/       # login e agenda da equipe
+├── services/     # chamadas à API e sessão
+└── utils/        # datas, preços, telefone
 ```
 
-## Próximos passos
+## Publicar
 
-- [x] Front-end em React (fluxo do cliente)
-- [ ] Login com JWT e painel do dono
-- [ ] Bloqueio de horários (almoço, folgas)
-- [ ] Confirmação e lembrete por e-mail
-- [ ] Deploy
+O passo a passo para colocar tudo online de graça está em [docs/DEPLOY.md](docs/DEPLOY.md).
+
+## Ideias para evoluir
+
+- Bloqueio de horários (almoço, folgas, feriados)
+- Confirmação e lembrete por e-mail ou WhatsApp
+- Cadastro de serviços e profissionais pelo painel
+- Relatório mensal de atendimentos e faturamento

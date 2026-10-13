@@ -1,0 +1,239 @@
+/* Painel da equipe: mesma identidade da página do cliente, mais denso,
+   pensado para quem consulta a agenda várias vezes ao dia. */
+
+.conteudo--largo {
+  max-width: 54rem;
+}
+
+.topo__linha {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  max-width: 40rem;
+  margin: 0 auto;
+}
+
+.topo--largo .topo__linha,
+.topo--largo .topo__titulo {
+  max-width: 52rem;
+}
+
+.topo__linha .topo__negocio {
+  margin: 0;
+  max-width: none;
+}
+
+.topo__sair {
+  border: 1px solid rgb(241 243 238 / 0.5);
+  background: transparent;
+  color: #f1f3ee;
+  border-radius: var(--raio);
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.rodape {
+  margin-top: 3rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--linha);
+  font-size: 0.9375rem;
+}
+
+.rodape a {
+  color: var(--tinta-suave);
+}
+
+.login {
+  max-width: 24rem;
+}
+
+.visualmente-oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------- Navegação de datas ---------- */
+
+.agenda-topo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.agenda-topo__data {
+  margin-bottom: 0;
+}
+
+.agenda-topo__data::first-letter {
+  text-transform: uppercase;
+}
+
+.agenda-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.agenda-nav .botao-secundario {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9375rem;
+}
+
+.agenda-nav .botao-secundario:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.agenda-nav__data input {
+  font: inherit;
+  font-size: 0.9375rem;
+  padding: 0.4375rem 0.5rem;
+  border: 1px solid var(--tinta);
+  border-radius: var(--raio);
+  background: transparent;
+  color: var(--tinta);
+}
+
+.agenda-resumo {
+  margin: 0 0 1.5rem;
+  color: var(--tinta-suave);
+  font-weight: 600;
+}
+
+/* ---------- Lista por profissional ---------- */
+
+.agenda-grupo {
+  margin-bottom: 2rem;
+}
+
+.agenda-grupo__nome {
+  font-size: 1.25rem;
+  font-stretch: 75%;
+  font-weight: 800;
+  margin: 0 0 0.5rem;
+  padding-bottom: 0.375rem;
+  border-bottom: 3px solid var(--latao);
+}
+
+.agenda-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.agenda-item {
+  display: grid;
+  grid-template-columns: 5.5rem 1fr auto;
+  gap: 0.5rem 1rem;
+  align-items: start;
+  padding: 0.875rem 0;
+  border-bottom: 1px solid var(--linha);
+}
+
+.agenda-item p {
+  margin: 0;
+}
+
+.agenda-item__hora {
+  font-size: 1.5rem;
+  font-weight: 800;
+  font-stretch: 68%;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.agenda-item__fim {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  font-stretch: 100%;
+  color: var(--tinta-suave);
+}
+
+.agenda-item__cliente {
+  font-weight: 700;
+}
+
+.agenda-item__servico {
+  color: var(--tinta-suave);
+  font-size: 0.9375rem;
+}
+
+.agenda-item__telefone {
+  font-size: 0.9375rem;
+  color: var(--verde-medio);
+  font-variant-numeric: tabular-nums;
+}
+
+.agenda-item__acoes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.agenda-item__status {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  background: var(--latao-claro);
+  color: var(--tinta);
+}
+
+.agenda-item--concluido .agenda-item__status {
+  background: var(--verde-medio);
+  color: #f1f3ee;
+}
+
+.agenda-item--cancelado .agenda-item__status {
+  background: transparent;
+  border: 1px solid var(--linha);
+  color: var(--tinta-suave);
+}
+
+.agenda-item--cancelado .agenda-item__hora,
+.agenda-item--cancelado .agenda-item__cliente {
+  text-decoration: line-through;
+  color: var(--tinta-suave);
+}
+
+.botao-pequeno {
+  padding: 0.375rem 0.75rem;
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  background: var(--superficie);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.botao-pequeno--ok {
+  border-color: var(--verde-medio);
+  color: var(--verde-medio);
+}
+
+.botao-pequeno:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+@media (max-width: 34rem) {
+  .agenda-item {
+    grid-template-columns: 4.5rem 1fr;
+  }
+
+  .agenda-item__acoes {
+    grid-column: 2;
+    justify-content: flex-start;
+  }
+}

@@ -8,18 +8,15 @@ export class ErroApi extends Error {
   }
 }
 
-async function requisicao(caminho, opcoes = {}) {
+async function requisicao(caminho, { token, ...opcoes } = {}) {
+  const headers = { 'Content-Type': 'application/json' }
+  if (token) headers.Authorization = `Bearer ${token}`
+
   let resposta
   try {
-    resposta = await fetch(BASE + caminho, {
-      headers: { 'Content-Type': 'application/json' },
-      ...opcoes,
-    })
+    resposta = await fetch(BASE + caminho, { ...opcoes, headers })
   } catch {
-    throw new ErroApi(
-      'Sem conexão com a agenda. Confira se a API está rodando em localhost:8080.',
-      0,
-    )
+    throw new ErroApi('Sem conexão com a agenda. Confira se a API está no ar.', 0)
   }
 
   if (!resposta.ok) {
@@ -27,7 +24,7 @@ async function requisicao(caminho, opcoes = {}) {
     try {
       problema = await resposta.json()
     } catch {
-      // resposta sem corpo JSON
+      // resposta sem corpo JSON (ex.: token expirado)
     }
     throw new ErroApi(
       problema.detail ?? `A agenda respondeu com erro ${resposta.status}.`,
@@ -40,6 +37,7 @@ async function requisicao(caminho, opcoes = {}) {
 }
 
 export const api = {
+  // Público (cliente agendando)
   listarServicos: () => requisicao('/servicos'),
   listarProfissionais: () => requisicao('/profissionais'),
   buscarHorarios: (profissionalId, servicoId, data) =>
@@ -48,4 +46,11 @@ export const api = {
     ),
   criarAgendamento: (dados) =>
     requisicao('/agendamentos', { method: 'POST', body: JSON.stringify(dados) }),
+
+  // Painel da equipe (exige login)
+  entrar: (email, senha) =>
+    requisicao('/auth/login', { method: 'POST', body: JSON.stringify({ email, senha }) }),
+  agendaDoDia: (data, token) => requisicao(`/agendamentos?data=${data}`, { token }),
+  concluir: (id, token) => requisicao(`/agendamentos/${id}/concluir`, { method: 'PATCH', token }),
+  cancelar: (id, token) => requisicao(`/agendamentos/${id}/cancelar`, { method: 'PATCH', token }),
 }
