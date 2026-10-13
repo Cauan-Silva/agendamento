@@ -36,6 +36,12 @@
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
+        <!-- E-mails de confirmação e lembrete -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
         <!-- Login: senhas com BCrypt e tokens JWT assinados (HS256) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

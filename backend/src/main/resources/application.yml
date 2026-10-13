@@ -13,13 +13,25 @@ spring:
       ddl-auto: validate   # quem cria/altera tabelas é o Flyway
   flyway:
     enabled: true
+  # E-mail: só é ativado quando SPRING_MAIL_HOST está definido (veja docs/DEPLOY.md).
+  # Sem ele, as mensagens aparecem apenas no log.
+  mail:
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
 
 server:
   port: ${PORT:8080}
 
 agenda:
+  nome-negocio: ${NOME_NEGOCIO:Barbearia Central}
   fuso-horario: America/Sao_Paulo
   intervalo-minutos: 30
+  email:
+    remetente: ${MAIL_REMETENTE:}
+  lembrete:
+    # Todo dia às 18h (segundo minuto hora dia mês dia-da-semana)
+    cron: ${LEMBRETE_CRON:0 0 18 * * *}
   # Endereços do front-end que podem chamar a API (separe vários com vírgula)
   cors-origens: ${CORS_ORIGENS:http://localhost:5173}
   jwt:

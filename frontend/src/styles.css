@@ -15,6 +15,7 @@
   --alerta: #9e3626;
   --alerta-fundo: #f6e3df;
   --foco: #a87c2e;
+  --barra: #1f7a52; /* gráfico: verde validado para contraste e saturação */
 
   --fonte: 'Archivo', system-ui, sans-serif;
   --raio: 6px;
@@ -36,6 +37,7 @@
     --alerta: #f0a090;
     --alerta-fundo: #3a1f1a;
     --foco: #d4ab5c;
+    --barra: #3a9e70;
     color-scheme: dark;
   }
 }
@@ -106,7 +108,7 @@ button {
 /* ---------- Conteúdo ---------- */
 
 .conteudo {
-  max-width: 42rem;
+  max-width: 42rem; /* 40rem de conteúdo + 1rem de margem de cada lado */
   margin: 0 auto;
   padding: 1.5rem 1rem 4rem;
 }
@@ -375,7 +377,13 @@ button {
   font-weight: 600;
 }
 
-.campo input {
+.campo__opcional {
+  font-weight: 400;
+  color: var(--tinta-suave);
+}
+
+.campo input,
+.campo select {
   font: inherit;
   font-weight: 400;
   font-size: 1.125rem;

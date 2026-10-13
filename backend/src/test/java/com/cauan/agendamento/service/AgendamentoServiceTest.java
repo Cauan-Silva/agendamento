@@ -5,12 +5,16 @@ import com.cauan.agendamento.dto.AgendamentoDtos.AgendamentoResponse;
 import com.cauan.agendamento.exception.ConflitoHorarioException;
 import com.cauan.agendamento.exception.RegraNegocioException;
 import com.cauan.agendamento.model.Agendamento;
+import com.cauan.agendamento.model.Bloqueio;
 import com.cauan.agendamento.model.Profissional;
 import com.cauan.agendamento.model.Servico;
 import com.cauan.agendamento.model.StatusAgendamento;
+import com.cauan.agendamento.notificacao.AgendamentoCriadoEvent;
 import com.cauan.agendamento.repository.AgendamentoRepository;
+import com.cauan.agendamento.repository.BloqueioRepository;
 import com.cauan.agendamento.repository.ProfissionalRepository;
 import com.cauan.agendamento.repository.ServicoRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -47,6 +51,10 @@ class AgendamentoServiceTest {
     private ProfissionalRepository profissionalRepository;
     @Mock
     private ServicoRepository servicoRepository;
+    @Mock
+    private BloqueioRepository bloqueioRepository;
+    @Mock
+    private ApplicationEventPublisher eventos;
 
     private AgendamentoService service;
     private Profissional ana;
@@ -55,7 +63,8 @@ class AgendamentoServiceTest {
     @BeforeEach
     void setUp() {
         Clock agora = Clock.fixed(LocalDateTime.of(2026, 10, 12, 8, 0).atZone(FUSO).toInstant(), FUSO);
-        service = new AgendamentoService(agendamentoRepository, profissionalRepository, servicoRepository, agora);
+        service = new AgendamentoService(agendamentoRepository, profissionalRepository, servicoRepository,
+                bloqueioRepository, eventos, agora);
 
         corte = new Servico("Corte de cabelo", 30, new BigDecimal("45.00"));
         corte.setId(1L);
@@ -70,7 +79,7 @@ class AgendamentoServiceTest {
     }
 
     private AgendamentoRequest pedido(LocalDateTime inicio) {
-        return new AgendamentoRequest(1L, 1L, inicio, "João", "48999990000");
+        return new AgendamentoRequest(1L, 1L, inicio, "João", "48999990000", " Joao@Email.com ");
     }
 
     private void profissionalEServicoExistem() {
@@ -89,6 +98,35 @@ class AgendamentoServiceTest {
         assertThat(resposta.inicio()).isEqualTo(SEGUNDA.atTime(14, 0));
         assertThat(resposta.fim()).isEqualTo(SEGUNDA.atTime(14, 30));
         assertThat(resposta.status()).isEqualTo(StatusAgendamento.AGENDADO);
+        assertThat(resposta.valor()).isEqualByComparingTo("45.00");
+        assertThat(resposta.clienteEmail()).isEqualTo("joao@email.com");
+        verify(eventos).publishEvent(any(AgendamentoCriadoEvent.class));
+    }
+
+    @Test
+    void recusaHorarioNoAlmoco() {
+        profissionalEServicoExistem();
+        ana.setAlmocoInicio(LocalTime.of(12, 0));
+        ana.setAlmocoFim(LocalTime.of(13, 0));
+
+        assertThatThrownBy(() -> service.criar(pedido(SEGUNDA.atTime(12, 15))))
+                .isInstanceOf(RegraNegocioException.class)
+                .hasMessageContaining("bloqueado");
+        verify(agendamentoRepository, never()).save(any());
+    }
+
+    @Test
+    void recusaHorarioComBloqueio() {
+        profissionalEServicoExistem();
+        Bloqueio folga = new Bloqueio();
+        folga.setInicio(SEGUNDA.atTime(14, 0));
+        folga.setFim(SEGUNDA.atTime(18, 0));
+        when(bloqueioRepository.buscarNoPeriodo(any(), any(), any())).thenReturn(List.of(folga));
+
+        assertThatThrownBy(() -> service.criar(pedido(SEGUNDA.atTime(15, 0))))
+                .isInstanceOf(RegraNegocioException.class)
+                .hasMessageContaining("bloqueado");
+        verify(eventos, never()).publishEvent(any(Object.class));
     }
 
     @Test

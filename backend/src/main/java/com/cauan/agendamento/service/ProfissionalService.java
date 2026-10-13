@@ -11,6 +11,7 @@ import com.cauan.agendamento.repository.ServicoRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalTime;
 import java.util.HashSet;
 import java.util.List;
 
@@ -58,6 +59,7 @@ public class ProfissionalService {
         if (!req.horaFim().isAfter(req.horaInicio())) {
             throw new RegraNegocioException("O fim do expediente deve ser depois do início");
         }
+        validarAlmoco(req);
 
         List<Servico> servicos = servicoRepository.findAllById(req.servicoIds());
         if (servicos.size() != req.servicoIds().size()) {
@@ -67,8 +69,27 @@ public class ProfissionalService {
         p.setNome(req.nome().trim());
         p.setHoraInicio(req.horaInicio());
         p.setHoraFim(req.horaFim());
+        p.setAlmocoInicio(req.almocoInicio());
+        p.setAlmocoFim(req.almocoFim());
         p.setDiasTrabalho(new HashSet<>(req.diasTrabalho()));
         p.setServicos(new HashSet<>(servicos));
+    }
+
+    private void validarAlmoco(ProfissionalRequest req) {
+        LocalTime inicio = req.almocoInicio();
+        LocalTime fim = req.almocoFim();
+        if (inicio == null && fim == null) {
+            return;
+        }
+        if (inicio == null || fim == null) {
+            throw new RegraNegocioException("Informe o início e o fim do almoço, ou deixe os dois em branco");
+        }
+        if (!fim.isAfter(inicio)) {
+            throw new RegraNegocioException("O fim do almoço deve ser depois do início");
+        }
+        if (inicio.isBefore(req.horaInicio()) || fim.isAfter(req.horaFim())) {
+            throw new RegraNegocioException("O almoço precisa estar dentro do expediente");
+        }
     }
 
     private Profissional obter(Long id) {

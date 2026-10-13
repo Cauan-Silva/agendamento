@@ -2,6 +2,7 @@ package com.cauan.agendamento.dto;
 
 import com.cauan.agendamento.model.Agendamento;
 import com.cauan.agendamento.model.StatusAgendamento;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -22,14 +23,17 @@ public final class AgendamentoDtos {
     /**
      * Exemplo de JSON:
      * { "profissionalId": 1, "servicoId": 2, "inicio": "2026-10-20T09:00:00",
-     *   "clienteNome": "João", "clienteTelefone": "48999990000" }
+     *   "clienteNome": "João", "clienteTelefone": "48999990000",
+     *   "clienteEmail": "joao@email.com" }
+     * O e-mail é opcional; com ele o cliente recebe confirmação e lembrete.
      */
     public record AgendamentoRequest(
             @NotNull Long profissionalId,
             @NotNull Long servicoId,
             @NotNull @Future LocalDateTime inicio,
             @NotBlank @Size(max = 100) String clienteNome,
-            @NotBlank @Pattern(regexp = "\\d{10,13}", message = "use só números, com DDD") String clienteTelefone) {
+            @NotBlank @Pattern(regexp = "\\d{10,13}", message = "use só números, com DDD") String clienteTelefone,
+            @Email(message = "e-mail inválido") @Size(max = 150) String clienteEmail) {
     }
 
     public record AgendamentoResponse(Long id,
@@ -40,6 +44,7 @@ public final class AgendamentoDtos {
                                       BigDecimal valor,
                                       String clienteNome,
                                       String clienteTelefone,
+                                      String clienteEmail,
                                       LocalDateTime inicio,
                                       LocalDateTime fim,
                                       StatusAgendamento status) {
@@ -51,9 +56,10 @@ public final class AgendamentoDtos {
                     a.getProfissional().getNome(),
                     a.getServico().getId(),
                     a.getServico().getNome(),
-                    a.getServico().getPreco(),
+                    a.getValor(),
                     a.getClienteNome(),
                     a.getClienteTelefone(),
+                    a.getClienteEmail(),
                     a.getInicio(),
                     a.getFim(),
                     a.getStatus());

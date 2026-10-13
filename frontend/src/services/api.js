@@ -53,4 +53,27 @@ export const api = {
   agendaDoDia: (data, token) => requisicao(`/agendamentos?data=${data}`, { token }),
   concluir: (id, token) => requisicao(`/agendamentos/${id}/concluir`, { method: 'PATCH', token }),
   cancelar: (id, token) => requisicao(`/agendamentos/${id}/cancelar`, { method: 'PATCH', token }),
+
+  salvarServico: (dados, id, token) =>
+    requisicao(id ? `/servicos/${id}` : '/servicos', {
+      method: id ? 'PUT' : 'POST',
+      body: JSON.stringify(dados),
+      token,
+    }),
+  desativarServico: (id, token) => requisicao(`/servicos/${id}`, { method: 'DELETE', token }),
+
+  salvarProfissional: (dados, id, token) =>
+    requisicao(id ? `/profissionais/${id}` : '/profissionais', {
+      method: id ? 'PUT' : 'POST',
+      body: JSON.stringify(dados),
+      token,
+    }),
+  desativarProfissional: (id, token) => requisicao(`/profissionais/${id}`, { method: 'DELETE', token }),
+
+  listarBloqueios: (token) => requisicao('/bloqueios', { token }),
+  criarBloqueio: (dados, token) =>
+    requisicao('/bloqueios', { method: 'POST', body: JSON.stringify(dados), token }),
+  removerBloqueio: (id, token) => requisicao(`/bloqueios/${id}`, { method: 'DELETE', token }),
+
+  relatorioMensal: (ano, mes, token) => requisicao(`/relatorios/mensal?ano=${ano}&mes=${mes}`, { token }),
 }

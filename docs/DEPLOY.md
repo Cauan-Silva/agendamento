@@ -49,6 +49,19 @@ As tabelas são criadas sozinhas pelo Flyway quando a API subir.
    | `ADMIN_EMAIL` | o e-mail que você vai usar no painel |
    | `ADMIN_SENHA` | uma senha forte para o painel |
    | `CORS_ORIGENS` | deixe `http://localhost:5173` por enquanto — você troca no passo 4 |
+   | `NOME_NEGOCIO` | o nome que aparece nos e-mails |
+
+   **E-mail (opcional).** Sem estas variáveis a API funciona normalmente, só não envia e-mails. Com uma conta Gmail (com verificação em duas etapas ativada), crie uma *senha de app* em myaccount.google.com/apppasswords e use:
+
+   | Nome | Valor |
+   |---|---|
+   | `SPRING_MAIL_HOST` | `smtp.gmail.com` |
+   | `SPRING_MAIL_PORT` | `587` |
+   | `SPRING_MAIL_USERNAME` | seu e-mail do Gmail |
+   | `SPRING_MAIL_PASSWORD` | a senha de app de 16 letras (não a senha normal) |
+   | `MAIL_REMETENTE` | o mesmo e-mail do Gmail |
+
+   Serviços próprios de e-mail transacional (Brevo, Resend, Mailgun etc.) também funcionam: use o host, a porta e o usuário SMTP que eles fornecem.
 
 5. Clique em **Create Web Service** e espere o primeiro deploy (alguns minutos, porque compila o Maven).
 6. Quando terminar, o Render mostra o endereço, algo como `https://agendamento-api-xxxx.onrender.com`. Teste:
@@ -84,6 +97,7 @@ Salve; o Render reinicia a API sozinho. Pronto: abra o endereço da Vercel e fa�
 
 - Cada `git push` na `main` publica as mudanças automaticamente no Render e na Vercel.
 - Coloque o link da Vercel no topo do README e no seu currículo/LinkedIn.
+- **Lembretes na véspera:** rodam todo dia às 18h, mas no plano gratuito do Render a API dorme quando ninguém usa — se ela estiver dormindo nesse horário, o lembrete do dia não sai. Para garantir, use um serviço gratuito de "ping" (como cron-job.org) que acesse `https://agendamento-api-xxxx.onrender.com/api/servicos` a cada 10 minutos entre 17h e 19h, ou passe a API para um plano pago.
 - Problemas comuns:
   - **Front-end mostra "Sem conexão"**: a API pode estar acordando (espere 1 minuto e tente de novo) ou o `CORS_ORIGENS` não bate exatamente com o endereço da Vercel.
   - **Deploy da API falha no início**: confira `DB_URL` (precisa começar com `jdbc:`) e se `JWT_SEGREDO` tem pelo menos 32 caracteres.

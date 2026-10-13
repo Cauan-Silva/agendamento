@@ -19,12 +19,16 @@ public final class ProfissionalDtos {
     /**
      * Exemplo de JSON:
      * { "nome": "Ana", "horaInicio": "09:00", "horaFim": "18:00",
+     *   "almocoInicio": "12:00", "almocoFim": "13:00",
      *   "diasTrabalho": ["MONDAY", "TUESDAY"], "servicoIds": [1, 2] }
+     * O almoço é opcional: envie os dois campos ou nenhum.
      */
     public record ProfissionalRequest(
             @NotBlank @Size(max = 100) String nome,
             @NotNull LocalTime horaInicio,
             @NotNull LocalTime horaFim,
+            LocalTime almocoInicio,
+            LocalTime almocoFim,
             @NotEmpty Set<DayOfWeek> diasTrabalho,
             @NotEmpty Set<Long> servicoIds) {
     }
@@ -33,6 +37,8 @@ public final class ProfissionalDtos {
                                        String nome,
                                        LocalTime horaInicio,
                                        LocalTime horaFim,
+                                       LocalTime almocoInicio,
+                                       LocalTime almocoFim,
                                        List<DayOfWeek> diasTrabalho,
                                        List<ServicoDtos.ServicoResponse> servicos,
                                        boolean ativo) {
@@ -43,6 +49,8 @@ public final class ProfissionalDtos {
                     p.getNome(),
                     p.getHoraInicio(),
                     p.getHoraFim(),
+                    p.getAlmocoInicio(),
+                    p.getAlmocoFim(),
                     p.getDiasTrabalho().stream().sorted().toList(),
                     p.getServicos().stream()
                             .sorted((a, b) -> a.getNome().compareToIgnoreCase(b.getNome()))

@@ -3,6 +3,8 @@ package com.cauan.agendamento.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -10,6 +12,8 @@ import java.time.Clock;
 import java.time.ZoneId;
 
 @Configuration
+@EnableAsync      // e-mails saem em segundo plano
+@EnableScheduling // lembrete diário
 public class AppConfig implements WebMvcConfigurer {
 
     @Value("${agenda.fuso-horario}")

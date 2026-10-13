@@ -2,10 +2,12 @@ package com.cauan.agendamento.service;
 
 import com.cauan.agendamento.exception.RegraNegocioException;
 import com.cauan.agendamento.model.Agendamento;
+import com.cauan.agendamento.model.Bloqueio;
 import com.cauan.agendamento.model.Profissional;
 import com.cauan.agendamento.model.Servico;
 import com.cauan.agendamento.model.StatusAgendamento;
 import com.cauan.agendamento.repository.AgendamentoRepository;
+import com.cauan.agendamento.repository.BloqueioRepository;
 import com.cauan.agendamento.repository.ProfissionalRepository;
 import com.cauan.agendamento.repository.ServicoRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,6 +46,8 @@ class DisponibilidadeServiceTest {
     private ServicoRepository servicoRepository;
     @Mock
     private AgendamentoRepository agendamentoRepository;
+    @Mock
+    private BloqueioRepository bloqueioRepository;
 
     private Profissional ana;
     private Servico servico60min;
@@ -65,7 +69,7 @@ class DisponibilidadeServiceTest {
     private DisponibilidadeService servicoComAgora(LocalDateTime agora) {
         Clock relogio = Clock.fixed(agora.atZone(FUSO).toInstant(), FUSO);
         return new DisponibilidadeService(profissionalRepository, servicoRepository,
-                agendamentoRepository, relogio, 30);
+                agendamentoRepository, bloqueioRepository, relogio, 30);
     }
 
     private void semAgendamentos() {
@@ -109,6 +113,45 @@ class DisponibilidadeServiceTest {
         List<LocalTime> horarios = service.calcularHorarios(ana, servico60min, SEGUNDA);
 
         assertThat(horarios).containsExactly(LocalTime.of(10, 30), LocalTime.of(11, 0));
+    }
+
+    @Test
+    void removeHorariosQueCaemNoAlmoco() {
+        semAgendamentos();
+        ana.setAlmocoInicio(LocalTime.of(10, 30));
+        ana.setAlmocoFim(LocalTime.of(11, 0));
+        DisponibilidadeService service = servicoComAgora(LocalDateTime.of(2026, 10, 12, 8, 0));
+
+        List<LocalTime> horarios = service.calcularHorarios(ana, servico60min, SEGUNDA);
+
+        // 10:00 (até 11:00) e 10:30 (até 11:30) pegam o almoço das 10:30–11:00
+        assertThat(horarios).containsExactly(LocalTime.of(9, 0), LocalTime.of(9, 30), LocalTime.of(11, 0));
+    }
+
+    @Test
+    void removeHorariosDentroDeUmBloqueio() {
+        semAgendamentos();
+        Bloqueio folga = new Bloqueio();
+        folga.setInicio(SEGUNDA.atTime(9, 0));
+        folga.setFim(SEGUNDA.atTime(10, 0));
+        when(bloqueioRepository.buscarNoPeriodo(eq(1L), any(), any())).thenReturn(List.of(folga));
+        DisponibilidadeService service = servicoComAgora(LocalDateTime.of(2026, 10, 12, 8, 0));
+
+        List<LocalTime> horarios = service.calcularHorarios(ana, servico60min, SEGUNDA);
+
+        assertThat(horarios).containsExactly(LocalTime.of(10, 0), LocalTime.of(10, 30), LocalTime.of(11, 0));
+    }
+
+    @Test
+    void feriadoBloqueiaODiaInteiro() {
+        semAgendamentos();
+        Bloqueio feriado = new Bloqueio();
+        feriado.setInicio(SEGUNDA.atStartOfDay());
+        feriado.setFim(SEGUNDA.atTime(23, 59));
+        when(bloqueioRepository.buscarNoPeriodo(eq(1L), any(), any())).thenReturn(List.of(feriado));
+        DisponibilidadeService service = servicoComAgora(LocalDateTime.of(2026, 10, 12, 8, 0));
+
+        assertThat(service.calcularHorarios(ana, servico60min, SEGUNDA)).isEmpty();
     }
 
     @Test

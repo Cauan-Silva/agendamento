@@ -4,14 +4,20 @@ import { dataPorExtenso, hora, mascaraTelefone, preco } from '../utils/formato.j
 export default function DadosCliente({ servico, profissional, data, horario, enviando, erros, onConfirmar }) {
   const [nome, setNome] = useState('')
   const [telefone, setTelefone] = useState('')
+  const [email, setEmail] = useState('')
 
   const numeros = telefone.replace(/\D/g, '')
-  const valido = nome.trim().length > 1 && numeros.length >= 10
+  const emailOk = email.trim() === '' || /^\S+@\S+\.\S+$/.test(email.trim())
+  const valido = nome.trim().length > 1 && numeros.length >= 10 && emailOk
 
   function enviar(evento) {
     evento.preventDefault()
     if (valido && !enviando) {
-      onConfirmar({ clienteNome: nome.trim(), clienteTelefone: numeros })
+      onConfirmar({
+        clienteNome: nome.trim(),
+        clienteTelefone: numeros,
+        clienteEmail: email.trim() || null,
+      })
     }
   }
 
@@ -64,6 +70,22 @@ export default function DadosCliente({ servico, profissional, data, horario, env
             aria-invalid={Boolean(erros.clienteTelefone)}
           />
           {erros.clienteTelefone && <small className="campo__erro">{erros.clienteTelefone}</small>}
+        </label>
+
+        <label className="campo">
+          <span>
+            E-mail <span className="campo__opcional">(opcional, para receber confirmação e lembrete)</span>
+          </span>
+          <input
+            type="email"
+            autoComplete="email"
+            value={email}
+            maxLength={150}
+            onChange={(e) => setEmail(e.target.value)}
+            aria-invalid={!emailOk || Boolean(erros.clienteEmail)}
+          />
+          {!emailOk && <small className="campo__erro">Confira o e-mail ou deixe em branco.</small>}
+          {erros.clienteEmail && <small className="campo__erro">{erros.clienteEmail}</small>}
         </label>
 
         <button type="submit" className="botao-principal" disabled={!valido || enviando}>

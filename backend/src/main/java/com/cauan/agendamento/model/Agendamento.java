@@ -12,6 +12,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -35,6 +36,16 @@ public class Agendamento {
 
     @Column(name = "cliente_telefone", nullable = false, length = 20)
     private String clienteTelefone;
+
+    @Column(name = "cliente_email", length = 150)
+    private String clienteEmail;
+
+    /** Preço cobrado, copiado do serviço no momento do agendamento. */
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal valor;
+
+    @Column(name = "lembrete_enviado", nullable = false)
+    private boolean lembreteEnviado = false;
 
     @Column(nullable = false)
     private LocalDateTime inicio;
@@ -68,6 +79,15 @@ public class Agendamento {
 
     public String getClienteTelefone() { return clienteTelefone; }
     public void setClienteTelefone(String clienteTelefone) { this.clienteTelefone = clienteTelefone; }
+
+    public String getClienteEmail() { return clienteEmail; }
+    public void setClienteEmail(String clienteEmail) { this.clienteEmail = clienteEmail; }
+
+    public BigDecimal getValor() { return valor; }
+    public void setValor(BigDecimal valor) { this.valor = valor; }
+
+    public boolean isLembreteEnviado() { return lembreteEnviado; }
+    public void setLembreteEnviado(boolean lembreteEnviado) { this.lembreteEnviado = lembreteEnviado; }
 
     public LocalDateTime getInicio() { return inicio; }
     public void setInicio(LocalDateTime inicio) { this.inicio = inicio; }

@@ -71,3 +71,23 @@ Content-Type: application/json
   "duracaoMinutos": 15,
   "preco": 20.00
 }
+
+### Feriado: negócio fechado o dia todo
+POST {{api}}/bloqueios
+Authorization: Bearer {{login.response.body.token}}
+Content-Type: application/json
+
+{
+  "profissionalId": null,
+  "inicio": "2026-11-02T00:00",
+  "fim": "2026-11-02T23:59",
+  "motivo": "Finados"
+}
+
+### Bloqueios vigentes
+GET {{api}}/bloqueios
+Authorization: Bearer {{login.response.body.token}}
+
+### Relatório do mês
+GET {{api}}/relatorios/mensal?ano=2026&mes=10
+Authorization: Bearer {{login.response.body.token}}

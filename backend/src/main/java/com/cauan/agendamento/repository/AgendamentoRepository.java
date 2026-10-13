@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 
 public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> {
@@ -29,6 +30,19 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> 
                                      @Param("ignorar") StatusAgendamento ignorar);
 
     List<Agendamento> findByInicioBetweenOrderByInicio(LocalDateTime de, LocalDateTime ate);
+
+    /** Agendamentos do período com e-mail e ainda sem lembrete. */
+    @Query("""
+            select a from Agendamento a
+            where a.inicio between :de and :ate
+              and a.clienteEmail is not null
+              and a.lembreteEnviado = false
+              and a.status in :status
+            order by a.inicio
+            """)
+    List<Agendamento> buscarParaLembrete(@Param("de") LocalDateTime de,
+                                         @Param("ate") LocalDateTime ate,
+                                         @Param("status") Collection<StatusAgendamento> status);
 
     List<Agendamento> findByProfissionalIdAndInicioBetweenOrderByInicio(Long profissionalId,
                                                                         LocalDateTime de,

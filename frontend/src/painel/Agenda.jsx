@@ -9,6 +9,19 @@ const STATUS = {
   CANCELADO: 'Cancelado',
 }
 
+const NOME_NEGOCIO = import.meta.env.VITE_NOME_NEGOCIO ?? 'Barbearia Central'
+
+/** Texto pronto para o WhatsApp; a pessoa da equipe só confere e envia. */
+function mensagemLembrete(item) {
+  const [data, horaInicio] = item.inicio.split('T')
+  const primeiroNome = item.clienteNome.split(' ')[0]
+  return (
+    `Olá, ${primeiroNome}! Passando para lembrar do seu horário na ${NOME_NEGOCIO}: ` +
+    `${item.servicoNome} com ${item.profissionalNome}, ${dataPorExtenso(data)}, às ${hora(horaInicio)}. ` +
+    `Se não puder vir, é só avisar por aqui. Até lá!`
+  )
+}
+
 function somarDias(iso, dias) {
   const [a, m, d] = iso.split('-').map(Number)
   return dataIso(new Date(a, m - 1, d + dias))
@@ -137,14 +150,26 @@ export default function Agenda({ token, onSessaoExpirada }) {
                         <p className="agenda-item__servico">
                           {item.servicoNome}, {preco(item.valor)}
                         </p>
-                        <a
-                          className="agenda-item__telefone"
-                          href={`https://wa.me/55${telefone}`}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          {mascaraTelefone(telefone)}
-                        </a>
+                        <p className="agenda-item__contato">
+                          <a
+                            className="agenda-item__telefone"
+                            href={`https://wa.me/55${telefone}`}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            {mascaraTelefone(telefone)}
+                          </a>
+                          {!encerrado && (
+                            <a
+                              className="agenda-item__lembrete"
+                              href={`https://wa.me/55${telefone}?text=${encodeURIComponent(mensagemLembrete(item))}`}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              Lembrar pelo WhatsApp
+                            </a>
+                          )}
+                        </p>
                       </div>
                       <div className="agenda-item__acoes">
                         <span className="agenda-item__status">{STATUS[item.status]}</span>

@@ -9,9 +9,12 @@ import com.cauan.agendamento.model.Agendamento;
 import com.cauan.agendamento.model.Profissional;
 import com.cauan.agendamento.model.Servico;
 import com.cauan.agendamento.model.StatusAgendamento;
+import com.cauan.agendamento.notificacao.AgendamentoCriadoEvent;
 import com.cauan.agendamento.repository.AgendamentoRepository;
+import com.cauan.agendamento.repository.BloqueioRepository;
 import com.cauan.agendamento.repository.ProfissionalRepository;
 import com.cauan.agendamento.repository.ServicoRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,15 +29,21 @@ public class AgendamentoService {
     private final AgendamentoRepository repository;
     private final ProfissionalRepository profissionalRepository;
     private final ServicoRepository servicoRepository;
+    private final BloqueioRepository bloqueioRepository;
+    private final ApplicationEventPublisher eventos;
     private final Clock clock;
 
     public AgendamentoService(AgendamentoRepository repository,
                               ProfissionalRepository profissionalRepository,
                               ServicoRepository servicoRepository,
+                              BloqueioRepository bloqueioRepository,
+                              ApplicationEventPublisher eventos,
                               Clock clock) {
         this.repository = repository;
         this.profissionalRepository = profissionalRepository;
         this.servicoRepository = servicoRepository;
+        this.bloqueioRepository = bloqueioRepository;
+        this.eventos = eventos;
         this.clock = clock;
     }
 
@@ -64,6 +73,12 @@ public class AgendamentoService {
             throw new RegraNegocioException("Horário fora do expediente de " + profissional.getNome());
         }
 
+        boolean bloqueado = profissional.almocoSobrepoe(inicio, fim)
+                || !bloqueioRepository.buscarNoPeriodo(profissional.getId(), inicio, fim).isEmpty();
+        if (bloqueado) {
+            throw new RegraNegocioException("Este horário está bloqueado na agenda de " + profissional.getNome());
+        }
+
         boolean ocupado = !repository.buscarOcupados(
                 profissional.getId(), inicio, fim, StatusAgendamento.CANCELADO).isEmpty();
         if (ocupado) {
@@ -73,14 +88,23 @@ public class AgendamentoService {
         Agendamento agendamento = new Agendamento();
         agendamento.setProfissional(profissional);
         agendamento.setServico(servico);
+        agendamento.setValor(servico.getPreco());
         agendamento.setClienteNome(req.clienteNome().trim());
         agendamento.setClienteTelefone(req.clienteTelefone());
+        agendamento.setClienteEmail(normalizarEmail(req.clienteEmail()));
         agendamento.setInicio(inicio);
         agendamento.setFim(fim);
         agendamento.setStatus(StatusAgendamento.AGENDADO);
         agendamento.setCriadoEm(LocalDateTime.now(clock));
 
-        return AgendamentoResponse.de(repository.save(agendamento));
+        AgendamentoResponse resposta = AgendamentoResponse.de(repository.save(agendamento));
+        // A confirmação por e-mail sai depois do commit (veja NotificacaoService).
+        eventos.publishEvent(new AgendamentoCriadoEvent(resposta));
+        return resposta;
+    }
+
+    private static String normalizarEmail(String email) {
+        return email == null || email.isBlank() ? null : email.trim().toLowerCase();
     }
 
     @Transactional(readOnly = true)

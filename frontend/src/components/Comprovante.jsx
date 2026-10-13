@@ -39,6 +39,11 @@ export default function Comprovante({ agendamento, nomeNegocio, onNovo }) {
         </div>
       </div>
 
+      {agendamento.clienteEmail && (
+        <p className="nota">
+          Enviamos a confirmação para {agendamento.clienteEmail}. Na véspera, você recebe um lembrete.
+        </p>
+      )}
       <p className="nota">
         Chegue alguns minutos antes. Para cancelar, fale com {nomeNegocio} e informe o número do
         agendamento.

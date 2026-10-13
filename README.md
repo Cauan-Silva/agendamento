@@ -9,9 +9,20 @@ Sistema de hora marcada para barbearias, salões, clínicas e outros negócios p
 
 ## O que tem aqui
 
-- **Página do cliente:** serviço → profissional → dia → horário → nome e celular → comprovante
-- **Painel da equipe** (`#/painel`): login, agenda do dia por profissional, total previsto, concluir e cancelar, link direto para o WhatsApp do cliente
-- **Sem horário duplicado:** a API recalcula a disponibilidade e trava o profissional no banco ao agendar; se duas pessoas tentam o mesmo horário, a segunda recebe `409` e a tela oferece outro horário
+**Para o cliente**
+- Serviço → profissional → dia → horário → nome, celular e e-mail (opcional) → comprovante
+- Só aparecem horários realmente livres: fora do almoço, de folgas e de feriados
+- Confirmação por e-mail na hora e lembrete na véspera
+
+**Para a equipe** (painel em `#/painel`, com login)
+- **Agenda do dia** por profissional, com concluir, cancelar e um botão que abre o WhatsApp do cliente com o lembrete já escrito
+- **Folgas e feriados:** bloqueios de dias inteiros ou de algumas horas, para uma pessoa ou para o negócio todo
+- **Serviços e equipe:** cadastro, edição e desativação, incluindo dias de trabalho, expediente e intervalo de almoço
+- **Relatório mensal:** faturado, previsto, cancelamentos, gráfico de atendimentos por dia e desempenho por profissional e por serviço
+
+**Por baixo**
+- **Sem horário duplicado:** a API recalcula a disponibilidade e trava o profissional no banco ao agendar; se duas pessoas tentam o mesmo horário, a segunda recebe `409` e a tela oferece outro
+- **Faturamento confiável:** o preço é gravado no agendamento, então mudar o preço de um serviço não altera relatórios passados
 
 ## Tecnologias
 
@@ -80,6 +91,9 @@ mvn test
 | PATCH | `/api/agendamentos/{id}/cancelar` | equipe | Cancela |
 | PATCH | `/api/agendamentos/{id}/concluir` | equipe | Marca como concluído |
 | POST/PUT/DELETE | `/api/servicos`, `/api/profissionais` | equipe | Cadastro (DELETE desativa) |
+| GET/POST | `/api/bloqueios` | equipe | Lista bloqueios vigentes / cria folga ou feriado |
+| DELETE | `/api/bloqueios/{id}` | equipe | Remove bloqueio |
+| GET | `/api/relatorios/mensal?ano=&mes=` | equipe | Relatório do mês |
 
 Rotas da equipe exigem `Authorization: Bearer <token>`. Erros seguem o padrão RFC 7807 (`application/problem+json`): 400 dados inválidos, 401 sem login, 404 não encontrado, 409 horário ocupado, 422 regra de negócio (fora do expediente, dia de folga etc.).
 
@@ -90,7 +104,8 @@ Para um profissional, um serviço e um dia, a API:
 1. Verifica se o profissional trabalha naquele dia da semana.
 2. Percorre o expediente em passos de 30 minutos (configurável em `agenda.intervalo-minutos`), considerando a duração do serviço.
 3. Remove os horários que já passaram.
-4. Remove os horários que se sobrepõem a agendamentos não cancelados.
+4. Remove os horários que caem no almoço ou em um bloqueio (folga da pessoa ou feriado do negócio).
+5. Remove os horários que se sobrepõem a agendamentos não cancelados.
 
 Ao criar um agendamento, tudo é verificado de novo no servidor, e a linha do profissional é bloqueada no banco (`SELECT ... FOR UPDATE`) durante a transação: a segunda requisição simultânea espera a primeira terminar e então recebe `409 Conflict`.
 
@@ -103,13 +118,14 @@ backend/src/main/java/com/cauan/agendamento/
 ├── dto/          # objetos de entrada e saída
 ├── exception/    # exceções e tratamento de erros
 ├── model/        # entidades JPA
+├── notificacao/  # e-mail de confirmação e lembrete diário
 ├── repository/   # acesso ao banco
 ├── security/     # login, JWT, regras de acesso
 └── service/      # regras de negócio
 
 frontend/src/
 ├── components/   # etapas do agendamento do cliente
-├── painel/       # login e agenda da equipe
+├── painel/       # login, agenda, bloqueios, cadastros e relatório
 ├── services/     # chamadas à API e sessão
 └── utils/        # datas, preços, telefone
 ```
@@ -118,9 +134,13 @@ frontend/src/
 
 O passo a passo para colocar tudo online de graça está em [docs/DEPLOY.md](docs/DEPLOY.md).
 
+### E-mail (opcional)
+
+Sem configuração, os e-mails aparecem apenas no log da API. Para enviar de verdade, defina as variáveis `SPRING_MAIL_HOST`, `SPRING_MAIL_PORT`, `SPRING_MAIL_USERNAME`, `SPRING_MAIL_PASSWORD` e `MAIL_REMETENTE` (detalhes em [docs/DEPLOY.md](docs/DEPLOY.md)). O lembrete roda todo dia às 18h para os agendamentos do dia seguinte.
+
 ## Ideias para evoluir
 
-- Bloqueio de horários (almoço, folgas, feriados)
-- Confirmação e lembrete por e-mail ou WhatsApp
-- Cadastro de serviços e profissionais pelo painel
-- Relatório mensal de atendimentos e faturamento
+- Envio automático pelo WhatsApp com a API oficial (WhatsApp Business)
+- Cliente cancelar o próprio horário por um link no e-mail
+- Alterar senha e criar logins para cada pessoa da equipe
+- Exportar o relatório em planilha

@@ -6,6 +6,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.time.DateTimeException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -28,6 +29,11 @@ public class TratadorDeErros {
     @ExceptionHandler(RegraNegocioException.class)
     public ProblemDetail regraNegocio(RegraNegocioException e) {
         return problema(HttpStatus.UNPROCESSABLE_ENTITY, "Regra de negócio", e.getMessage());
+    }
+
+    @ExceptionHandler(DateTimeException.class)
+    public ProblemDetail dataInvalida(DateTimeException e) {
+        return problema(HttpStatus.BAD_REQUEST, "Data inválida", e.getMessage());
     }
 
     @ExceptionHandler(CredenciaisInvalidasException.class)
