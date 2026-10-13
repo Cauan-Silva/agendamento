@@ -2,12 +2,11 @@
 
 API para barbearias, salões, clínicas e outros negócios que trabalham com hora marcada. O cliente escolhe o serviço, o profissional e o dia, e a API mostra só os horários realmente livres, impedindo que duas pessoas reservem o mesmo horário.
 
-> Projeto em construção: o back-end está pronto para uso; o front-end em React vem na próxima etapa.
-
 ## Tecnologias
 
-- Java 21 e Spring Boot 3.5 (Web, Data JPA, Validation)
-- PostgreSQL 16 com migrações via Flyway
+- **Back-end:** Java 21 e Spring Boot 3.5 (Web, Data JPA, Validation)
+- **Front-end:** React 19 com Vite
+- PostgreSQL com migrações via Flyway
 - Docker Compose para o banco
 - Swagger/OpenAPI para documentação
 - JUnit 5, Mockito e AssertJ nos testes
@@ -28,6 +27,18 @@ mvn spring-boot:run
 A API sobe em `http://localhost:8080` e a documentação interativa fica em `http://localhost:8080/swagger-ui.html`.
 
 O banco já vem com dados de exemplo (3 serviços e 2 profissionais) para você testar na hora. O arquivo `backend/requests.http` tem requisições prontas para usar com a extensão REST Client do VS Code.
+
+### Front-end
+
+Com a API rodando, em outro terminal:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Abra `http://localhost:5173`. O cliente escolhe serviço, profissional, dia e horário, informa nome e celular e recebe um comprovante com o número do agendamento. Para mudar o endereço da API ou o nome do negócio, copie `frontend/.env.example` para `frontend/.env` e ajuste.
 
 ### Testes
 
@@ -83,7 +94,7 @@ backend/src/main/java/com/cauan/agendamento/
 
 ## Próximos passos
 
-- [ ] Front-end em React (fluxo do cliente)
+- [x] Front-end em React (fluxo do cliente)
 - [ ] Login com JWT e painel do dono
 - [ ] Bloqueio de horários (almoço, folgas)
 - [ ] Confirmação e lembrete por e-mail

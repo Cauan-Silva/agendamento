@@ -1,0 +1,559 @@
+/* Identidade: barbearia de bairro. Verde-garrafa da fachada, latão das
+   ferragens e títulos condensados como letreiro pintado. O único momento
+   "chamativo" é o tíquete de confirmação. */
+
+:root {
+  --verde: #1e3a2f;
+  --verde-medio: #2f5a47;
+  --latao: #a87c2e;
+  --latao-claro: #e9d9b4;
+  --fundo: #eceee8;
+  --superficie: #ffffff;
+  --tinta: #18211c;
+  --tinta-suave: #4f5a53;
+  --linha: #c8cec5;
+  --alerta: #9e3626;
+  --alerta-fundo: #f6e3df;
+  --foco: #a87c2e;
+
+  --fonte: 'Archivo', system-ui, sans-serif;
+  --raio: 6px;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --verde: #16291f;
+    --verde-medio: #6fa287;
+    --latao: #d4ab5c;
+    --latao-claro: #3a3221;
+    --fundo: #101713;
+    --superficie: #18221c;
+    --tinta: #e5eae3;
+    --tinta-suave: #a3ada5;
+    --linha: #2e3b33;
+    --alerta: #f0a090;
+    --alerta-fundo: #3a1f1a;
+    --foco: #d4ab5c;
+    color-scheme: dark;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--fundo);
+  color: var(--tinta);
+  font-family: var(--fonte);
+  font-size: 1rem;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 3px solid var(--foco);
+  outline-offset: 2px;
+}
+
+/* ---------- Topo ---------- */
+
+.topo {
+  background: var(--verde);
+  color: #f1f3ee;
+  padding: 2.5rem 1rem 2rem;
+  border-bottom: 4px solid var(--latao);
+}
+
+.topo__negocio,
+.topo__titulo {
+  max-width: 40rem;
+  margin: 0 auto;
+}
+
+.topo__negocio {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--latao-claro);
+}
+
+@media (prefers-color-scheme: dark) {
+  .topo__negocio {
+    color: var(--latao);
+  }
+}
+
+.topo__titulo {
+  font-size: clamp(2.5rem, 9vw, 3.75rem);
+  font-stretch: 68%;
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: -0.01em;
+  margin-top: 0.25rem;
+}
+
+/* ---------- Conteúdo ---------- */
+
+.conteudo {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 4rem;
+}
+
+.titulo-etapa {
+  font-size: 1.75rem;
+  font-stretch: 75%;
+  font-weight: 800;
+  line-height: 1.1;
+  margin: 1.75rem 0 1rem;
+}
+
+.subtitulo {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 1.5rem 0 0.75rem;
+}
+
+.subtitulo::first-letter {
+  text-transform: uppercase;
+}
+
+.aviso {
+  color: var(--tinta-suave);
+  margin: 1rem 0;
+}
+
+.aviso--alerta {
+  color: var(--alerta);
+  background: var(--alerta-fundo);
+  border-left: 4px solid var(--alerta);
+  padding: 0.75rem 1rem;
+  border-radius: 0 var(--raio) var(--raio) 0;
+}
+
+.aviso--alerta p {
+  margin: 0 0 0.75rem;
+}
+
+/* ---------- Etapas (é uma sequência real, por isso numerada) ---------- */
+
+.etapas {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+}
+
+.etapa > span,
+.etapa > button {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 100%;
+  padding: 0.5rem 0 0;
+  border: 0;
+  border-top: 4px solid var(--linha);
+  background: none;
+  text-align: left;
+  font-size: 0.8125rem;
+  color: var(--tinta-suave);
+}
+
+.etapa__num {
+  font-weight: 800;
+  font-stretch: 75%;
+  font-size: 1.125rem;
+  line-height: 1;
+}
+
+.etapa--feita > button {
+  border-top-color: var(--verde-medio);
+  color: var(--tinta);
+}
+
+.etapa--feita > button:hover .etapa__nome {
+  text-decoration: underline;
+}
+
+.etapa--atual > span {
+  border-top-color: var(--latao);
+  color: var(--tinta);
+  font-weight: 600;
+}
+
+@media (max-width: 26rem) {
+  .etapa:not(.etapa--atual) .etapa__nome {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+}
+
+/* ---------- Listas de escolha (serviço e profissional) ---------- */
+
+.lista-opcoes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--linha);
+}
+
+.opcao {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-areas:
+    'inicial nome  preco'
+    'inicial detalhe preco';
+  align-items: center;
+  column-gap: 0.875rem;
+  width: 100%;
+  padding: 1rem 0.75rem;
+  border: 0;
+  border-bottom: 1px solid var(--linha);
+  background: none;
+  text-align: left;
+}
+
+.opcao:hover {
+  background: var(--superficie);
+}
+
+.opcao[aria-pressed='true'] {
+  background: var(--superficie);
+  box-shadow: inset 4px 0 0 var(--latao);
+}
+
+.opcao__nome {
+  grid-area: nome;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.opcao__detalhe {
+  grid-area: detalhe;
+  font-size: 0.9375rem;
+  color: var(--tinta-suave);
+}
+
+.opcao__preco {
+  grid-area: preco;
+  font-size: 1.125rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.opcao__inicial {
+  grid-area: inicial;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  background: var(--verde);
+  color: var(--latao-claro);
+  font-weight: 800;
+  font-stretch: 75%;
+  font-size: 1.25rem;
+}
+
+/* ---------- Dias e horários ---------- */
+
+.dias {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding: 0.25rem 0.125rem 0.75rem;
+  scroll-snap-type: x proximity;
+}
+
+.dia {
+  flex: 0 0 4.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.625rem 0.25rem;
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  background: var(--superficie);
+  scroll-snap-align: start;
+}
+
+.dia__semana {
+  font-size: 0.8125rem;
+  color: var(--tinta-suave);
+}
+
+.dia__data {
+  font-weight: 700;
+  font-stretch: 85%;
+  white-space: nowrap;
+}
+
+.dia[aria-pressed='true'] {
+  background: var(--verde);
+  border-color: var(--verde);
+  color: #f1f3ee;
+}
+
+.dia[aria-pressed='true'] .dia__semana {
+  color: var(--latao-claro);
+}
+
+.horarios {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(5.25rem, 1fr));
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+}
+
+.horario {
+  width: 100%;
+  padding: 0.75rem 0;
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  background: var(--superficie);
+  font-size: 1.125rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.horario:hover {
+  border-color: var(--latao);
+  box-shadow: inset 0 -3px 0 var(--latao);
+}
+
+/* ---------- Resumo e formulário ---------- */
+
+.resumo {
+  margin: 0 0 1.5rem;
+  padding: 0;
+  border-top: 1px solid var(--linha);
+}
+
+.resumo > div {
+  display: grid;
+  grid-template-columns: 6rem 1fr;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--linha);
+}
+
+.resumo dt {
+  color: var(--tinta-suave);
+}
+
+.resumo dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.formulario {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.campo {
+  display: grid;
+  gap: 0.375rem;
+  font-weight: 600;
+}
+
+.campo input {
+  font: inherit;
+  font-weight: 400;
+  font-size: 1.125rem;
+  padding: 0.75rem 0.875rem;
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  background: var(--superficie);
+  color: var(--tinta);
+}
+
+.campo input:focus-visible {
+  outline-offset: 0;
+}
+
+.campo input[aria-invalid='true'] {
+  border-color: var(--alerta);
+}
+
+.campo__erro {
+  color: var(--alerta);
+  font-weight: 400;
+}
+
+.botao-principal,
+.botao-secundario {
+  padding: 0.9375rem 1.25rem;
+  border-radius: var(--raio);
+  font-size: 1.0625rem;
+  font-weight: 700;
+}
+
+.botao-principal {
+  border: 0;
+  background: var(--verde);
+  color: #f1f3ee;
+  box-shadow: inset 0 -4px 0 var(--latao);
+}
+
+@media (prefers-color-scheme: dark) {
+  .botao-principal {
+    background: var(--verde-medio);
+    color: #0e1511;
+  }
+}
+
+.botao-principal:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.botao-secundario {
+  border: 1px solid var(--tinta);
+  background: transparent;
+}
+
+/* ---------- Comprovante (o tíquete) ---------- */
+
+.ticket {
+  --furo: 0.75rem;
+  display: grid;
+  grid-template-columns: 1fr 5.5rem;
+  margin: 0.5rem 0 1.5rem;
+  filter: drop-shadow(0 2px 0 var(--linha));
+  animation: destacar 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.ticket__corpo {
+  /* meia-lua recortada nas pontas da linha picotada */
+  mask:
+    radial-gradient(circle var(--furo) at 100% 0, #0000 98%, #000) top / 100% 51% no-repeat,
+    radial-gradient(circle var(--furo) at 100% 100%, #0000 98%, #000) bottom / 100% 51% no-repeat;
+}
+
+.ticket__canhoto {
+  mask:
+    radial-gradient(circle var(--furo) at 0 0, #0000 98%, #000) top / 100% 51% no-repeat,
+    radial-gradient(circle var(--furo) at 0 100%, #0000 98%, #000) bottom / 100% 51% no-repeat;
+}
+
+.ticket__corpo {
+  background: var(--superficie);
+  padding: 1.25rem 1.25rem 1rem;
+  border-radius: var(--raio) 0 0 var(--raio);
+  border-right: 2px dashed var(--linha);
+}
+
+.ticket__negocio {
+  margin: 0;
+  font-weight: 600;
+  color: var(--tinta-suave);
+}
+
+.ticket__hora {
+  margin: 0;
+  font-size: clamp(3.5rem, 16vw, 5rem);
+  font-weight: 800;
+  font-stretch: 62%;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--verde);
+}
+
+@media (prefers-color-scheme: dark) {
+  .ticket__hora {
+    color: var(--latao);
+  }
+}
+
+.ticket__data {
+  margin: 0.25rem 0 1rem;
+  font-weight: 600;
+}
+
+.ticket__data::first-letter {
+  text-transform: uppercase;
+}
+
+.ticket__itens {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem 1rem;
+  margin: 0;
+}
+
+.ticket__itens dt {
+  font-size: 0.8125rem;
+  color: var(--tinta-suave);
+}
+
+.ticket__itens dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.ticket__canhoto {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  background: var(--latao);
+  color: #1b1408;
+  border-radius: 0 var(--raio) var(--raio) 0;
+}
+
+.ticket__rotulo {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.ticket__numero {
+  font-size: 1.75rem;
+  font-weight: 800;
+  font-stretch: 62%;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  letter-spacing: 0.04em;
+}
+
+.nota {
+  color: var(--tinta-suave);
+  margin: 0 0 1.5rem;
+  max-width: 34rem;
+}
+
+@keyframes destacar {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem) rotate(-1.5deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ticket {
+    animation: none;
+  }
+}
