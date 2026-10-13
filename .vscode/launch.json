@@ -1,0 +1,12 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Rodar API de agendamento",
+      "request": "launch",
+      "mainClass": "com.cauan.agendamento.AgendamentoApplication",
+      "projectName": "agendamento-api"
+    }
+  ]
+}

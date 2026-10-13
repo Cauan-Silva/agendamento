@@ -1,0 +1,65 @@
+package com.cauan.agendamento.dto;
+
+import com.cauan.agendamento.model.Agendamento;
+import com.cauan.agendamento.model.StatusAgendamento;
+import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.List;
+
+public final class AgendamentoDtos {
+
+    private AgendamentoDtos() {
+    }
+
+    /**
+     * Exemplo de JSON:
+     * { "profissionalId": 1, "servicoId": 2, "inicio": "2026-10-20T09:00:00",
+     *   "clienteNome": "João", "clienteTelefone": "48999990000" }
+     */
+    public record AgendamentoRequest(
+            @NotNull Long profissionalId,
+            @NotNull Long servicoId,
+            @NotNull @Future LocalDateTime inicio,
+            @NotBlank @Size(max = 100) String clienteNome,
+            @NotBlank @Pattern(regexp = "\\d{10,13}", message = "use só números, com DDD") String clienteTelefone) {
+    }
+
+    public record AgendamentoResponse(Long id,
+                                      Long profissionalId,
+                                      String profissionalNome,
+                                      Long servicoId,
+                                      String servicoNome,
+                                      String clienteNome,
+                                      String clienteTelefone,
+                                      LocalDateTime inicio,
+                                      LocalDateTime fim,
+                                      StatusAgendamento status) {
+
+        public static AgendamentoResponse de(Agendamento a) {
+            return new AgendamentoResponse(
+                    a.getId(),
+                    a.getProfissional().getId(),
+                    a.getProfissional().getNome(),
+                    a.getServico().getId(),
+                    a.getServico().getNome(),
+                    a.getClienteNome(),
+                    a.getClienteTelefone(),
+                    a.getInicio(),
+                    a.getFim(),
+                    a.getStatus());
+        }
+    }
+
+    public record DisponibilidadeResponse(Long profissionalId,
+                                          Long servicoId,
+                                          LocalDate data,
+                                          List<LocalTime> horarios) {
+    }
+}

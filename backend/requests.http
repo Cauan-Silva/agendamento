@@ -1,0 +1,54 @@
+### Requisições de exemplo — abra no VS Code com a extensão REST Client
+### e clique em "Send Request" acima de cada uma.
+
+@api = http://localhost:8080/api
+
+### Listar serviços
+GET {{api}}/servicos
+
+### Listar profissionais
+GET {{api}}/profissionais
+
+### Horários livres da Ana (id 1) para "Corte de cabelo" (id 1)
+### Troque a data por uma segunda a sexta-feira no futuro.
+GET {{api}}/disponibilidade?profissionalId=1&servicoId=1&data=2026-10-19
+
+### Criar agendamento
+POST {{api}}/agendamentos
+Content-Type: application/json
+
+{
+  "profissionalId": 1,
+  "servicoId": 1,
+  "inicio": "2026-10-19T10:00:00",
+  "clienteNome": "João",
+  "clienteTelefone": "48999990000"
+}
+
+### Tentar o mesmo horário de novo (deve responder 409)
+POST {{api}}/agendamentos
+Content-Type: application/json
+
+{
+  "profissionalId": 1,
+  "servicoId": 1,
+  "inicio": "2026-10-19T10:00:00",
+  "clienteNome": "Maria",
+  "clienteTelefone": "48988880000"
+}
+
+### Agenda da Ana no dia
+GET {{api}}/agendamentos?profissionalId=1&data=2026-10-19
+
+### Cancelar o agendamento 1
+PATCH {{api}}/agendamentos/1/cancelar
+
+### Cadastrar um serviço
+POST {{api}}/servicos
+Content-Type: application/json
+
+{
+  "nome": "Sobrancelha",
+  "duracaoMinutos": 15,
+  "preco": 20.00
+}

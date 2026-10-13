@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: agendamento-api
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/agendamento}
+    username: ${DB_USER:agendamento}
+    password: ${DB_PASSWORD:agendamento}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate   # quem cria/altera tabelas é o Flyway
+    properties:
+      hibernate:
+        format_sql: true
+  flyway:
+    enabled: true
+
+server:
+  port: 8080
+
+agenda:
+  fuso-horario: America/Sao_Paulo
+  intervalo-minutos: 30
+  cors-origens: http://localhost:5173
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html

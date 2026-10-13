@@ -1,0 +1,74 @@
+package com.cauan.agendamento.controller;
+
+import com.cauan.agendamento.dto.AgendamentoDtos.AgendamentoRequest;
+import com.cauan.agendamento.dto.AgendamentoDtos.AgendamentoResponse;
+import com.cauan.agendamento.dto.AgendamentoDtos.DisponibilidadeResponse;
+import com.cauan.agendamento.service.AgendamentoService;
+import com.cauan.agendamento.service.DisponibilidadeService;
+import jakarta.validation.Valid;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.time.LocalDate;
+import java.util.List;
+
+@RestController
+@RequestMapping("/api")
+public class AgendamentoController {
+
+    private final AgendamentoService agendamentoService;
+    private final DisponibilidadeService disponibilidadeService;
+
+    public AgendamentoController(AgendamentoService agendamentoService,
+                                 DisponibilidadeService disponibilidadeService) {
+        this.agendamentoService = agendamentoService;
+        this.disponibilidadeService = disponibilidadeService;
+    }
+
+    /** Ex.: GET /api/disponibilidade?profissionalId=1&servicoId=2&data=2026-10-20 */
+    @GetMapping("/disponibilidade")
+    public DisponibilidadeResponse disponibilidade(
+            @RequestParam Long profissionalId,
+            @RequestParam Long servicoId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate data) {
+        return disponibilidadeService.consultar(profissionalId, servicoId, data);
+    }
+
+    @PostMapping("/agendamentos")
+    @ResponseStatus(HttpStatus.CREATED)
+    public AgendamentoResponse criar(@Valid @RequestBody AgendamentoRequest req) {
+        return agendamentoService.criar(req);
+    }
+
+    /** Agenda de um profissional em um dia. Ex.: GET /api/agendamentos?profissionalId=1&data=2026-10-20 */
+    @GetMapping("/agendamentos")
+    public List<AgendamentoResponse> listar(
+            @RequestParam Long profissionalId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate data) {
+        return agendamentoService.listarDoDia(profissionalId, data);
+    }
+
+    @GetMapping("/agendamentos/{id}")
+    public AgendamentoResponse buscar(@PathVariable Long id) {
+        return agendamentoService.buscar(id);
+    }
+
+    @PatchMapping("/agendamentos/{id}/cancelar")
+    public AgendamentoResponse cancelar(@PathVariable Long id) {
+        return agendamentoService.cancelar(id);
+    }
+
+    @PatchMapping("/agendamentos/{id}/concluir")
+    public AgendamentoResponse concluir(@PathVariable Long id) {
+        return agendamentoService.concluir(id);
+    }
+}

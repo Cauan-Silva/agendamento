@@ -1,0 +1,23 @@
+# Java / Maven
+backend/target/
+*.class
+*.log
+
+# Node (front-end futuro)
+node_modules/
+dist/
+
+# IDEs
+.idea/
+*.iml
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/settings.json
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Variáveis de ambiente
+.env
