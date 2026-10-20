@@ -47,7 +47,8 @@ jobs:
       - name: Total de testes
         if: success()
         shell: bash
-        run: grep -E "Tests run: [0-9]+, Failures" build.log | tail -1 | sed 's/^\[[A-Z]*\] */::notice title=Testes::/'
+        run: |
+          grep -E "Tests run: [0-9]+, Failures" build.log | tail -1 | sed 's/^\[[A-Z]*\] */::notice title=Testes::/'
       # Mostra os erros de compilação e de teste no resumo da execução
       - name: Resumo dos erros
         if: failure()
