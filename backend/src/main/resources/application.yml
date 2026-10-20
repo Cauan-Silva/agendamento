@@ -32,6 +32,11 @@ agenda:
   lembrete:
     # Todo dia às 18h (segundo minuto hora dia mês dia-da-semana)
     cron: ${LEMBRETE_CRON:0 0 18 * * *}
+  # Endereço do site (front-end), usado no link "cancelar ou remarcar" dos e-mails
+  url-site: ${URL_SITE:http://localhost:5173}
+  cliente:
+    # Pelo link, o cliente pode cancelar ou remarcar até X horas antes do horário
+    antecedencia-horas: ${ANTECEDENCIA_HORAS:2}
   # Endereços do front-end que podem chamar a API (separe vários com vírgula)
   cors-origens: ${CORS_ORIGENS:http://localhost:5173}
   jwt:

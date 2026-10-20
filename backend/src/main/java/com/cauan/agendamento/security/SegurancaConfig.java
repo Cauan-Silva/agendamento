@@ -27,6 +27,7 @@ import java.nio.charset.StandardCharsets;
  * Quem pode acessar o quê.
  *
  * Público (cliente agendando): ver serviços, profissionais e horários livres, e criar agendamento.
+ * Público com código: o cliente consulta, cancela ou remarca o próprio horário pelo link do e-mail.
  * Restrito (equipe logada): cadastrar serviços/profissionais e ver/alterar a agenda.
  *
  * O login devolve um token JWT; o front-end envia esse token no cabeçalho
@@ -49,6 +50,10 @@ public class SegurancaConfig {
                         .requestMatchers(HttpMethod.GET, "/api/servicos/**", "/api/profissionais/**",
                                 "/api/disponibilidade").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/agendamentos").permitAll()
+                        // Cliente pelo link do e-mail: o código secreto faz o papel do login
+                        .requestMatchers(HttpMethod.GET, "/api/meu-agendamento/*").permitAll()
+                        .requestMatchers(HttpMethod.PATCH, "/api/meu-agendamento/*/cancelar",
+                                "/api/meu-agendamento/*/remarcar").permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(o -> o.jwt(Customizer.withDefaults()));
         return http.build();

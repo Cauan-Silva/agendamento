@@ -33,13 +33,21 @@ public class NotificacaoService {
     private final ObjectProvider<JavaMailSender> mailSender;
     private final String remetente;
     private final String nomeNegocio;
+    private final String urlSite;
 
     public NotificacaoService(ObjectProvider<JavaMailSender> mailSender,
                               @Value("${agenda.email.remetente}") String remetente,
-                              @Value("${agenda.nome-negocio}") String nomeNegocio) {
+                              @Value("${agenda.nome-negocio}") String nomeNegocio,
+                              @Value("${agenda.url-site}") String urlSite) {
         this.mailSender = mailSender;
         this.remetente = remetente;
         this.nomeNegocio = nomeNegocio;
+        this.urlSite = urlSite.endsWith("/") ? urlSite.substring(0, urlSite.length() - 1) : urlSite;
+    }
+
+    /** Página onde o cliente consulta, cancela ou remarca o horário, sem login. */
+    String linkDoCliente(AgendamentoResponse a) {
+        return urlSite + "/#/meu-agendamento/" + a.codigoAcesso();
     }
 
     /**
@@ -61,13 +69,55 @@ public class NotificacaoService {
                 %s, às %s
                 Número do agendamento: %04d
 
-                Se precisar cancelar, fale com %s e informe o número acima.
+                Precisa cancelar ou trocar o horário? Use este link:
+                %s
 
                 Até lá!
                 %s
                 """.formatted(a.clienteNome(), a.servicoNome(), a.profissionalNome(),
                         capitalizar(a.inicio().format(DATA)), a.inicio().format(HORA), a.id(),
-                        nomeNegocio, nomeNegocio));
+                        linkDoCliente(a), nomeNegocio));
+    }
+
+    /** Confirmação para o cliente depois que ele mesmo remarca ou cancela pelo link. */
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void aoAlterarAgendamento(AgendamentoAlteradoEvent evento) {
+        AgendamentoResponse a = evento.agendamento();
+        if (evento.alteracao() == AgendamentoAlteradoEvent.Alteracao.CANCELADO) {
+            enviar(a.clienteEmail(),
+                    "Horário cancelado em " + nomeNegocio,
+                    """
+                    Olá, %s!
+
+                    Seu horário de %s com %s em %s, às %s, foi cancelado.
+
+                    Quando quiser, é só agendar de novo:
+                    %s
+
+                    %s
+                    """.formatted(a.clienteNome(), a.servicoNome(), a.profissionalNome(),
+                            a.inicio().format(DATA), a.inicio().format(HORA), urlSite, nomeNegocio));
+            return;
+        }
+        enviar(a.clienteEmail(),
+                "Horário remarcado: " + a.servicoNome() + " em " + nomeNegocio,
+                """
+                Olá, %s!
+
+                Seu horário foi remarcado para:
+
+                %s com %s
+                %s, às %s
+                Número do agendamento: %04d
+
+                Para cancelar ou trocar de novo:
+                %s
+
+                %s
+                """.formatted(a.clienteNome(), a.servicoNome(), a.profissionalNome(),
+                        capitalizar(a.inicio().format(DATA)), a.inicio().format(HORA), a.id(),
+                        linkDoCliente(a), nomeNegocio));
     }
 
     /** Usado pelo LembreteService. Devolve true se o e-mail saiu (ou foi registrado no log). */
@@ -82,12 +132,14 @@ public class NotificacaoService {
                 %s com %s
                 %s, às %s
 
-                Se não puder ir, avise %s para liberar o horário para outra pessoa.
+                Se não puder ir, cancele ou troque o horário por este link,
+                para liberar a vaga para outra pessoa:
+                %s
 
                 %s
                 """.formatted(a.clienteNome(), a.servicoNome(), a.profissionalNome(),
                         capitalizar(a.inicio().format(DATA)), a.inicio().format(HORA),
-                        nomeNegocio, nomeNegocio));
+                        linkDoCliente(a), nomeNegocio));
     }
 
     private boolean enviar(String para, String assunto, String texto) {

@@ -9,6 +9,9 @@ import com.cauan.agendamento.model.Bloqueio;
 import com.cauan.agendamento.model.Profissional;
 import com.cauan.agendamento.model.Servico;
 import com.cauan.agendamento.model.StatusAgendamento;
+import com.cauan.agendamento.dto.AgendamentoDtos.AgendamentoClienteResponse;
+import com.cauan.agendamento.exception.RecursoNaoEncontradoException;
+import com.cauan.agendamento.notificacao.AgendamentoAlteradoEvent;
 import com.cauan.agendamento.notificacao.AgendamentoCriadoEvent;
 import com.cauan.agendamento.repository.AgendamentoRepository;
 import com.cauan.agendamento.repository.BloqueioRepository;
@@ -64,7 +67,7 @@ class AgendamentoServiceTest {
     void setUp() {
         Clock agora = Clock.fixed(LocalDateTime.of(2026, 10, 12, 8, 0).atZone(FUSO).toInstant(), FUSO);
         service = new AgendamentoService(agendamentoRepository, profissionalRepository, servicoRepository,
-                bloqueioRepository, eventos, agora);
+                bloqueioRepository, eventos, agora, 2);
 
         corte = new Servico("Corte de cabelo", 30, new BigDecimal("45.00"));
         corte.setId(1L);
@@ -167,5 +170,135 @@ class AgendamentoServiceTest {
         when(agendamentoRepository.findById(5L)).thenReturn(Optional.of(concluido));
 
         assertThatThrownBy(() -> service.cancelar(5L)).isInstanceOf(RegraNegocioException.class);
+    }
+
+    // ---------- Cliente pelo link do e-mail ----------
+
+    /** Agendamento da Ana na segunda às 14h; "agora" é a segunda anterior às 8h. */
+    private Agendamento agendamentoDoCliente() {
+        Agendamento a = new Agendamento();
+        a.setId(7L);
+        a.setProfissional(ana);
+        a.setServico(corte);
+        a.setValor(corte.getPreco());
+        a.setClienteNome("João");
+        a.setClienteTelefone("48999990000");
+        a.setInicio(SEGUNDA.atTime(14, 0));
+        a.setFim(SEGUNDA.atTime(14, 30));
+        a.setStatus(StatusAgendamento.AGENDADO);
+        a.setCodigoAcesso("codigo-secreto");
+        return a;
+    }
+
+    @Test
+    void criaAgendamentoComCodigoDeAcessoUnico() {
+        profissionalEServicoExistem();
+        when(agendamentoRepository.buscarOcupados(any(), any(), any(), any())).thenReturn(List.of());
+        when(agendamentoRepository.save(any(Agendamento.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        String primeiro = service.criar(pedido(SEGUNDA.atTime(14, 0))).codigoAcesso();
+        String segundo = service.criar(pedido(SEGUNDA.atTime(15, 0))).codigoAcesso();
+
+        assertThat(primeiro).hasSize(43).matches("[A-Za-z0-9_-]+");
+        assertThat(segundo).isNotEqualTo(primeiro);
+    }
+
+    @Test
+    void clienteConsultaPeloCodigoESabeAteQuandoPodeAlterar() {
+        when(agendamentoRepository.findByCodigoAcesso("codigo-secreto")).thenReturn(Optional.of(agendamentoDoCliente()));
+
+        AgendamentoClienteResponse resposta = service.buscarPeloCodigo("codigo-secreto");
+
+        assertThat(resposta.podeAlterar()).isTrue();
+        assertThat(resposta.alterarAte()).isEqualTo(SEGUNDA.atTime(12, 0));
+    }
+
+    @Test
+    void codigoInexistenteDa404() {
+        when(agendamentoRepository.findByCodigoAcesso("errado")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.buscarPeloCodigo("errado"))
+                .isInstanceOf(RecursoNaoEncontradoException.class);
+    }
+
+    @Test
+    void clienteCancelaPeloLinkEAvisaPorEmail() {
+        Agendamento agendamento = agendamentoDoCliente();
+        when(agendamentoRepository.findByCodigoAcesso("codigo-secreto")).thenReturn(Optional.of(agendamento));
+
+        AgendamentoClienteResponse resposta = service.cancelarPeloCliente("codigo-secreto");
+
+        assertThat(resposta.status()).isEqualTo(StatusAgendamento.CANCELADO);
+        assertThat(resposta.podeAlterar()).isFalse();
+        verify(eventos).publishEvent(any(AgendamentoAlteradoEvent.class));
+    }
+
+    @Test
+    void clienteNaoCancelaEmCimaDaHora() {
+        Agendamento agendamento = agendamentoDoCliente();
+        agendamento.setInicio(LocalDateTime.of(2026, 10, 12, 9, 0)); // 1h depois de "agora"
+        agendamento.setFim(LocalDateTime.of(2026, 10, 12, 9, 30));
+        when(agendamentoRepository.findByCodigoAcesso("codigo-secreto")).thenReturn(Optional.of(agendamento));
+
+        assertThatThrownBy(() -> service.cancelarPeloCliente("codigo-secreto"))
+                .isInstanceOf(RegraNegocioException.class)
+                .hasMessageContaining("2 hora(s) antes");
+        assertThat(agendamento.getStatus()).isEqualTo(StatusAgendamento.AGENDADO);
+    }
+
+    @Test
+    void clienteNaoMexeEmAgendamentoJaCancelado() {
+        Agendamento agendamento = agendamentoDoCliente();
+        agendamento.setStatus(StatusAgendamento.CANCELADO);
+        when(agendamentoRepository.findByCodigoAcesso("codigo-secreto")).thenReturn(Optional.of(agendamento));
+
+        assertThatThrownBy(() -> service.remarcarPeloCliente("codigo-secreto", SEGUNDA.atTime(16, 0)))
+                .isInstanceOf(RegraNegocioException.class)
+                .hasMessageContaining("já foi cancelado");
+    }
+
+    @Test
+    void clienteRemarcaParaOutroHorarioLivre() {
+        Agendamento agendamento = agendamentoDoCliente();
+        agendamento.setLembreteEnviado(true);
+        when(agendamentoRepository.findByCodigoAcesso("codigo-secreto")).thenReturn(Optional.of(agendamento));
+        when(profissionalRepository.findByIdParaAtualizar(1L)).thenReturn(Optional.of(ana));
+        when(agendamentoRepository.buscarOcupados(any(), any(), any(), any())).thenReturn(List.of());
+
+        AgendamentoClienteResponse resposta = service.remarcarPeloCliente("codigo-secreto", SEGUNDA.atTime(16, 0));
+
+        assertThat(resposta.inicio()).isEqualTo(SEGUNDA.atTime(16, 0));
+        assertThat(resposta.fim()).isEqualTo(SEGUNDA.atTime(16, 30));
+        assertThat(agendamento.isLembreteEnviado()).isFalse();
+        verify(eventos).publishEvent(any(AgendamentoAlteradoEvent.class));
+    }
+
+    @Test
+    void remarcarIgnoraOProprioHorarioMasNaoODeOutroCliente() {
+        Agendamento agendamento = agendamentoDoCliente();
+        Agendamento outro = new Agendamento();
+        outro.setId(8L);
+        outro.setInicio(SEGUNDA.atTime(15, 0));
+        outro.setFim(SEGUNDA.atTime(15, 30));
+        when(agendamentoRepository.findByCodigoAcesso("codigo-secreto")).thenReturn(Optional.of(agendamento));
+        when(profissionalRepository.findByIdParaAtualizar(1L)).thenReturn(Optional.of(ana));
+        when(agendamentoRepository.buscarOcupados(any(), any(), any(), any()))
+                .thenReturn(List.of(agendamento))   // 14:00 -> 14:00 de novo: só ele mesmo
+                .thenReturn(List.of(outro));        // 15:00: horário de outro cliente
+
+        assertThat(service.remarcarPeloCliente("codigo-secreto", SEGUNDA.atTime(14, 0)).inicio())
+                .isEqualTo(SEGUNDA.atTime(14, 0));
+        assertThatThrownBy(() -> service.remarcarPeloCliente("codigo-secreto", SEGUNDA.atTime(15, 0)))
+                .isInstanceOf(ConflitoHorarioException.class);
+    }
+
+    // ---------- Equipe: cada profissional só mexe nos próprios horários ----------
+
+    @Test
+    void profissionalNaoConcluiAgendamentoDeOutraPessoa() {
+        when(agendamentoRepository.findById(7L)).thenReturn(Optional.of(agendamentoDoCliente()));
+
+        assertThatThrownBy(() -> service.concluir(7L, 99L)).isInstanceOf(RecursoNaoEncontradoException.class);
+        assertThat(service.concluir(7L, 1L).status()).isEqualTo(StatusAgendamento.CONCLUIDO);
     }
 }

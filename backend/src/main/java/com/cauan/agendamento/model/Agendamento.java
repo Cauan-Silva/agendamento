@@ -60,6 +60,10 @@ public class Agendamento {
     @Column(name = "criado_em", nullable = false)
     private LocalDateTime criadoEm;
 
+    /** Código secreto do link enviado ao cliente para cancelar ou remarcar. */
+    @Column(name = "codigo_acesso", nullable = false, unique = true, length = 64)
+    private String codigoAcesso;
+
     /** Verdadeiro se este agendamento ocupa algum minuto do intervalo [inicio, fim). */
     public boolean sobrepoe(LocalDateTime outroInicio, LocalDateTime outroFim) {
         return inicio.isBefore(outroFim) && fim.isAfter(outroInicio);
@@ -100,4 +104,7 @@ public class Agendamento {
 
     public LocalDateTime getCriadoEm() { return criadoEm; }
     public void setCriadoEm(LocalDateTime criadoEm) { this.criadoEm = criadoEm; }
+
+    public String getCodigoAcesso() { return codigoAcesso; }
+    public void setCodigoAcesso(String codigoAcesso) { this.codigoAcesso = codigoAcesso; }
 }
