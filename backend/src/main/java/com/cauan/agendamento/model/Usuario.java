@@ -2,9 +2,14 @@ package com.cauan.agendamento.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
@@ -28,6 +33,15 @@ public class Usuario {
     @Column(nullable = false)
     private boolean ativo = true;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private Perfil perfil = Perfil.ADMIN;
+
+    /** Profissional da agenda a que este login corresponde (obrigatório para PROFISSIONAL). */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "profissional_id")
+    private Profissional profissional;
+
     public Usuario() {
     }
 
@@ -35,6 +49,10 @@ public class Usuario {
         this.nome = nome;
         this.email = email;
         this.senhaHash = senhaHash;
+    }
+
+    public boolean isAdmin() {
+        return perfil == Perfil.ADMIN;
     }
 
     public Long getId() { return id; }
@@ -51,4 +69,10 @@ public class Usuario {
 
     public boolean isAtivo() { return ativo; }
     public void setAtivo(boolean ativo) { this.ativo = ativo; }
+
+    public Perfil getPerfil() { return perfil; }
+    public void setPerfil(Perfil perfil) { this.perfil = perfil; }
+
+    public Profissional getProfissional() { return profissional; }
+    public void setProfissional(Profissional profissional) { this.profissional = profissional; }
 }

@@ -45,6 +45,7 @@ class AuthServiceTest {
         service = new AuthService(usuarioRepository, passwordEncoder, jwtEncoder,
                 Clock.fixed(AGORA, ZoneOffset.UTC), 12);
         dono = new Usuario("Dono", "dono@barbearia.com", "hash");
+        dono.setId(1L);
     }
 
     @Test

@@ -110,4 +110,65 @@ class IntegracaoTest {
         mvc.perform(get("/api/agendamentos?data=" + segundaFutura(1)).header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    void profissionalVeSoAPropriaAgendaEPerdeOAcessoAoSerDesativado() throws Exception {
+        String admin = entrar("admin@agendamento.local", "admin123");
+
+        // Dados de exemplo: Ana (id 1) atende segunda; Bruno (id 2) atende terça.
+        LocalDate segunda = segundaFutura(3);
+        LocalDate terca = segunda.plusDays(1);
+        agendar(segunda, "10:00", "Cliente da Ana");
+        String pedidoBruno = """
+                {"profissionalId": 2, "servicoId": 1, "inicio": "%sT14:00:00",
+                 "clienteNome": "Cliente do Bruno", "clienteTelefone": "48999990000"}
+                """.formatted(terca);
+        long idBruno = corpo(mvc.perform(post("/api/agendamentos").contentType(MediaType.APPLICATION_JSON)
+                .content(pedidoBruno)).andExpect(status().isCreated()).andReturn()).get("id").asLong();
+
+        String novoLogin = """
+                {"nome": "Ana", "email": "ana@barbearia.com", "senha": "senha-da-ana",
+                 "perfil": "PROFISSIONAL", "profissionalId": 1}""";
+        long idLoginAna = corpo(mvc.perform(post("/api/usuarios").header("Authorization", "Bearer " + admin)
+                        .contentType(MediaType.APPLICATION_JSON).content(novoLogin))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.profissionalNome").value("Ana"))
+                .andReturn()).get("id").asLong();
+
+        String ana = entrar("ana@barbearia.com", "senha-da-ana");
+
+        // Pedindo a agenda do Bruno, recebe a própria (vazia na terça).
+        mvc.perform(get("/api/agendamentos?profissionalId=2&data=" + terca).header("Authorization", "Bearer " + ana))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+        mvc.perform(get("/api/agendamentos?data=" + segunda).header("Authorization", "Bearer " + ana))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].clienteNome").value("Cliente da Ana"));
+        mvc.perform(patch("/api/agendamentos/" + idBruno + "/cancelar").header("Authorization", "Bearer " + ana))
+                .andExpect(status().isNotFound());
+
+        // Telas de administrador: proibido.
+        mvc.perform(get("/api/usuarios").header("Authorization", "Bearer " + ana)).andExpect(status().isForbidden());
+        mvc.perform(get("/api/relatorios/mensal?ano=2026&mes=10").header("Authorization", "Bearer " + ana))
+                .andExpect(status().isForbidden());
+
+        // Troca a própria senha.
+        mvc.perform(patch("/api/auth/senha").header("Authorization", "Bearer " + ana)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"senhaAtual\": \"senha-da-ana\", \"novaSenha\": \"outra-senha\"}"))
+                .andExpect(status().isNoContent());
+        mvc.perform(get("/api/auth/eu").header("Authorization", "Bearer " + ana))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.perfil").value("PROFISSIONAL"));
+
+        // Desativada pelo administrador: o token que ela já tinha para de valer na hora.
+        String desativar = """
+                {"nome": "Ana", "email": "ana@barbearia.com", "perfil": "PROFISSIONAL",
+                 "profissionalId": 1, "ativo": false}""";
+        mvc.perform(put("/api/usuarios/" + idLoginAna).header("Authorization", "Bearer " + admin)
+                        .contentType(MediaType.APPLICATION_JSON).content(desativar))
+                .andExpect(status().isOk());
+        mvc.perform(get("/api/agendamentos?data=" + segunda).header("Authorization", "Bearer " + ana))
+                .andExpect(status().isUnauthorized());
+    }
 }

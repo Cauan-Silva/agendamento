@@ -3,11 +3,13 @@ package com.cauan.agendamento.controller;
 import com.cauan.agendamento.dto.AgendamentoDtos.AgendamentoRequest;
 import com.cauan.agendamento.dto.AgendamentoDtos.AgendamentoResponse;
 import com.cauan.agendamento.dto.AgendamentoDtos.DisponibilidadeResponse;
+import com.cauan.agendamento.security.UsuarioAutenticado;
 import com.cauan.agendamento.service.AgendamentoService;
 import com.cauan.agendamento.service.DisponibilidadeService;
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -52,26 +54,29 @@ public class AgendamentoController {
     /**
      * Agenda do dia (requer login). Ex.: GET /api/agendamentos?data=2026-10-20
      * Use profissionalId para filtrar por uma pessoa da equipe.
+     * Login de profissional: sempre só a própria agenda, qualquer que seja o filtro.
      */
     @GetMapping("/agendamentos")
     public List<AgendamentoResponse> listar(
             @RequestParam(required = false) Long profissionalId,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate data) {
-        return agendamentoService.listarDoDia(profissionalId, data);
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate data,
+            Authentication autenticacao) {
+        Long somenteDele = UsuarioAutenticado.de(autenticacao).somenteDoProfissional();
+        return agendamentoService.listarDoDia(somenteDele != null ? somenteDele : profissionalId, data);
     }
 
     @GetMapping("/agendamentos/{id}")
-    public AgendamentoResponse buscar(@PathVariable Long id) {
-        return agendamentoService.buscar(id);
+    public AgendamentoResponse buscar(@PathVariable Long id, Authentication autenticacao) {
+        return agendamentoService.buscar(id, UsuarioAutenticado.de(autenticacao).somenteDoProfissional());
     }
 
     @PatchMapping("/agendamentos/{id}/cancelar")
-    public AgendamentoResponse cancelar(@PathVariable Long id) {
-        return agendamentoService.cancelar(id);
+    public AgendamentoResponse cancelar(@PathVariable Long id, Authentication autenticacao) {
+        return agendamentoService.cancelar(id, UsuarioAutenticado.de(autenticacao).somenteDoProfissional());
     }
 
     @PatchMapping("/agendamentos/{id}/concluir")
-    public AgendamentoResponse concluir(@PathVariable Long id) {
-        return agendamentoService.concluir(id);
+    public AgendamentoResponse concluir(@PathVariable Long id, Authentication autenticacao) {
+        return agendamentoService.concluir(id, UsuarioAutenticado.de(autenticacao).somenteDoProfissional());
     }
 }

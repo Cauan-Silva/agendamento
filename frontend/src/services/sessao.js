@@ -4,7 +4,8 @@ const CHAVE = 'agendamento.sessao'
 export function lerSessao() {
   try {
     const sessao = JSON.parse(localStorage.getItem(CHAVE))
-    if (sessao && new Date(sessao.expiraEm) > new Date()) return sessao
+    // Sessões de antes dos perfis (sem "perfil") precisam entrar de novo.
+    if (sessao && sessao.perfil && new Date(sessao.expiraEm) > new Date()) return sessao
   } catch {
     // armazenamento indisponível ou conteúdo inválido
   }

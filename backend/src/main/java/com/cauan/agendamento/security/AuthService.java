@@ -55,11 +55,15 @@ public class AuthService {
                 .issuedAt(agora)
                 .expiresAt(expira)
                 .subject(usuario.getEmail())
+                .claim("uid", usuario.getId())
                 .claim("nome", usuario.getNome())
                 .build();
         JwsHeader cabecalho = JwsHeader.with(MacAlgorithm.HS256).build();
 
         String token = jwtEncoder.encode(JwtEncoderParameters.from(cabecalho, claims)).getTokenValue();
-        return new LoginResponse(token, usuario.getNome(), expira);
+        Long profissionalId = usuario.getProfissional() == null ? null : usuario.getProfissional().getId();
+        String profissionalNome = usuario.getProfissional() == null ? null : usuario.getProfissional().getNome();
+        return new LoginResponse(token, usuario.getId(), usuario.getNome(), expira, usuario.getPerfil(), profissionalId,
+                profissionalNome);
     }
 }

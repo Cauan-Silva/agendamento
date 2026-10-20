@@ -599,3 +599,8 @@
   font-size: 0.8125rem;
   margin-top: 0.5rem;
 }
+
+/* Login desativado na lista de acessos */
+.lista-cadastro--inativo {
+  opacity: 0.6;
+}

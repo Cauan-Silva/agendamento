@@ -6,15 +6,21 @@ import Servicos from './Servicos.jsx'
 import Equipe from './Equipe.jsx'
 import Bloqueios from './Bloqueios.jsx'
 import Relatorio from './Relatorio.jsx'
+import Usuarios from './Usuarios.jsx'
+import MinhaConta from './MinhaConta.jsx'
 
 const NOME_NEGOCIO = import.meta.env.VITE_NOME_NEGOCIO ?? 'Barbearia Central'
 
+// "perfis": quem vê a aba. O profissional vê só a própria agenda e a própria conta
+// (a API aplica as mesmas regras; aqui é só para não mostrar o que não pode usar).
 const ABAS = [
-  { id: 'agenda', nome: 'Agenda', Componente: Agenda },
-  { id: 'bloqueios', nome: 'Folgas e feriados', Componente: Bloqueios },
-  { id: 'servicos', nome: 'Serviços', Componente: Servicos },
-  { id: 'equipe', nome: 'Equipe', Componente: Equipe },
-  { id: 'relatorio', nome: 'Relatório', Componente: Relatorio },
+  { id: 'agenda', nome: 'Agenda', Componente: Agenda, perfis: ['ADMIN', 'PROFISSIONAL'] },
+  { id: 'bloqueios', nome: 'Folgas e feriados', Componente: Bloqueios, perfis: ['ADMIN'] },
+  { id: 'servicos', nome: 'Serviços', Componente: Servicos, perfis: ['ADMIN'] },
+  { id: 'equipe', nome: 'Equipe', Componente: Equipe, perfis: ['ADMIN'] },
+  { id: 'relatorio', nome: 'Relatório', Componente: Relatorio, perfis: ['ADMIN'] },
+  { id: 'acessos', nome: 'Acessos', Componente: Usuarios, perfis: ['ADMIN'] },
+  { id: 'conta', nome: 'Minha conta', Componente: MinhaConta, perfis: ['ADMIN', 'PROFISSIONAL'] },
 ]
 
 export default function Painel() {
@@ -25,6 +31,7 @@ export default function Painel() {
   function entrar(resposta) {
     salvarSessao(resposta)
     setAviso(null)
+    setAba('agenda')
     setSessao(resposta)
   }
 
@@ -39,7 +46,8 @@ export default function Painel() {
     setAviso('Sua sessão expirou. Entre de novo para continuar.')
   }, [])
 
-  const { Componente } = ABAS.find((a) => a.id === aba)
+  const abas = sessao ? ABAS.filter((a) => a.perfis.includes(sessao.perfil)) : []
+  const { Componente } = abas.find((a) => a.id === aba) ?? ABAS[0]
 
   return (
     <div className="pagina">
@@ -52,14 +60,16 @@ export default function Painel() {
             </button>
           )}
         </div>
-        <h1 className="topo__titulo">Painel da equipe</h1>
+        <h1 className="topo__titulo">
+          {sessao?.perfil === 'PROFISSIONAL' ? `Agenda de ${sessao.profissionalNome}` : 'Painel da equipe'}
+        </h1>
       </header>
 
       <main className="conteudo conteudo--largo">
         {sessao ? (
           <>
             <nav className="abas" aria-label="Seções do painel">
-              {ABAS.map((a) => (
+              {abas.map((a) => (
                 <button
                   key={a.id}
                   type="button"
@@ -71,7 +81,7 @@ export default function Painel() {
                 </button>
               ))}
             </nav>
-            <Componente token={sessao.token} onSessaoExpirada={expirou} />
+            <Componente token={sessao.token} sessao={sessao} onSessaoExpirada={expirou} />
           </>
         ) : (
           <Login aviso={aviso} onEntrar={entrar} />

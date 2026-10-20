@@ -85,5 +85,17 @@ export const api = {
     requisicao('/bloqueios', { method: 'POST', body: JSON.stringify(dados), token }),
   removerBloqueio: (id, token) => requisicao(`/bloqueios/${id}`, { method: 'DELETE', token }),
 
+  // Logins da equipe (administrador)
+  listarUsuarios: (token) => requisicao('/usuarios', { token }),
+  criarUsuario: (dados, token) => requisicao('/usuarios', { method: 'POST', body: JSON.stringify(dados), token }),
+  atualizarUsuario: (id, dados, token) =>
+    requisicao(`/usuarios/${id}`, { method: 'PUT', body: JSON.stringify(dados), token }),
+  redefinirSenha: (id, novaSenha, token) =>
+    requisicao(`/usuarios/${id}/senha`, { method: 'PATCH', body: JSON.stringify({ novaSenha }), token }),
+
+  // Qualquer pessoa logada
+  trocarMinhaSenha: (senhaAtual, novaSenha, token) =>
+    requisicao('/auth/senha', { method: 'PATCH', body: JSON.stringify({ senhaAtual, novaSenha }), token }),
+
   relatorioMensal: (ano, mes, token) => requisicao(`/relatorios/mensal?ano=${ano}&mes=${mes}`, { token }),
 }
