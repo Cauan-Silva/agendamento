@@ -47,6 +47,16 @@ export const api = {
   criarAgendamento: (dados) =>
     requisicao('/agendamentos', { method: 'POST', body: JSON.stringify(dados) }),
 
+  // Cliente pelo link do e-mail (o código substitui o login)
+  meuAgendamento: (codigo) => requisicao(`/meu-agendamento/${encodeURIComponent(codigo)}`),
+  cancelarMeuAgendamento: (codigo) =>
+    requisicao(`/meu-agendamento/${encodeURIComponent(codigo)}/cancelar`, { method: 'PATCH' }),
+  remarcarMeuAgendamento: (codigo, inicio) =>
+    requisicao(`/meu-agendamento/${encodeURIComponent(codigo)}/remarcar`, {
+      method: 'PATCH',
+      body: JSON.stringify({ inicio }),
+    }),
+
   // Painel da equipe (exige login)
   entrar: (email, senha) =>
     requisicao('/auth/login', { method: 'POST', body: JSON.stringify({ email, senha }) }),

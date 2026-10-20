@@ -45,8 +45,9 @@ export default function Comprovante({ agendamento, nomeNegocio, onNovo }) {
         </p>
       )}
       <p className="nota">
-        Chegue alguns minutos antes. Para cancelar, fale com {nomeNegocio} e informe o número do
-        agendamento.
+        Chegue alguns minutos antes. Precisa cancelar ou trocar o horário?{' '}
+        <a href={`#/meu-agendamento/${agendamento.codigoAcesso}`}>Use esta página</a>
+        {agendamento.clienteEmail ? ' (o link também está no e-mail).' : ' — salve o link nos favoritos.'}
       </p>
 
       <button type="button" className="botao-secundario" onClick={onNovo}>

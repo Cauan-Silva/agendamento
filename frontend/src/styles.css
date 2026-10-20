@@ -439,6 +439,29 @@ button {
   background: transparent;
 }
 
+.botao-perigo {
+  padding: 0.9375rem 1.25rem;
+  border-radius: var(--raio);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  border: 1px solid var(--alerta);
+  background: transparent;
+  color: var(--alerta);
+}
+
+.botao-perigo:disabled,
+.botao-secundario:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.acoes-cliente {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
 /* ---------- Comprovante (o tíquete) ---------- */
 
 .ticket {
@@ -541,6 +564,16 @@ button {
   writing-mode: vertical-rl;
   transform: rotate(180deg);
   letter-spacing: 0.04em;
+}
+
+/* Horário cancelado: o tíquete fica apagado e riscado */
+.ticket--cancelado {
+  opacity: 0.55;
+  animation: none;
+}
+
+.ticket--cancelado .ticket__hora {
+  text-decoration: line-through;
 }
 
 .nota {
