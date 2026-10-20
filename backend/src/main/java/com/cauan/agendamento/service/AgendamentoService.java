@@ -28,7 +28,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.List;
-import java.util.Objects;
 
 @Service
 public class AgendamentoService {
@@ -119,7 +118,7 @@ public class AgendamentoService {
 
         boolean ocupado = repository.buscarOcupados(profissional.getId(), inicio, fim, StatusAgendamento.CANCELADO)
                 .stream()
-                .anyMatch(a -> !Objects.equals(a.getId(), ignorarId));
+                .anyMatch(a -> ignorarId == null || !ignorarId.equals(a.getId()));
         if (ocupado) {
             throw new ConflitoHorarioException("Este horário acabou de ser reservado. Escolha outro.");
         }
