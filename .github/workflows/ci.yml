@@ -44,6 +44,10 @@ jobs:
       - name: Compilar e testar
         run: mvn -B -ntp verify 2>&1 | tee build.log; exit ${PIPESTATUS[0]}
         shell: bash
+      - name: Total de testes
+        if: success()
+        shell: bash
+        run: grep -E "Tests run: [0-9]+, Failures" build.log | tail -1 | sed 's/^\[[A-Z]*\] */::notice title=Testes::/'
       # Mostra os erros de compilação e de teste no resumo da execução
       - name: Resumo dos erros
         if: failure()
