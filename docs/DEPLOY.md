@@ -91,12 +91,15 @@ No Render, volte em **Environment** e troque `CORS_ORIGENS` para o endereço da 
 ```
 https://agendamento-xxxx.vercel.app
 ```
+Na mesma tela, crie `URL_SITE` com esse mesmo endereço: é ele que vai no link "cancelar ou remarcar" dos e-mails. Se quiser mudar o prazo para o cliente mexer no horário pelo link (padrão: até 2 horas antes), crie também `ANTECEDENCIA_HORAS`.
+
 Salve; o Render reinicia a API sozinho. Pronto: abra o endereço da Vercel e faça um agendamento. O painel fica em `https://agendamento-xxxx.vercel.app/#/painel`.
 
 ## Depois de publicado
 
 - Cada `git push` na `main` publica as mudanças automaticamente no Render e na Vercel.
 - Coloque o link da Vercel no topo do README e no seu currículo/LinkedIn.
+- **Logins da equipe:** entre no painel com o administrador, abra **Acessos** e crie um login para cada profissional. Cada um vê só a própria agenda e troca a senha em **Minha conta**.
 - **Lembretes na véspera:** rodam todo dia às 18h, mas no plano gratuito do Render a API dorme quando ninguém usa — se ela estiver dormindo nesse horário, o lembrete do dia não sai. Para garantir, use um serviço gratuito de "ping" (como cron-job.org) que acesse `https://agendamento-api-xxxx.onrender.com/api/servicos` a cada 10 minutos entre 17h e 19h, ou passe a API para um plano pago.
 - Problemas comuns:
   - **Front-end mostra "Sem conexão"**: a API pode estar acordando (espere 1 minuto e tente de novo) ou o `CORS_ORIGENS` não bate exatamente com o endereço da Vercel.
