@@ -45,9 +45,11 @@ As tabelas são criadas sozinhas pelo Flyway quando a API subir.
    | `DB_URL` | o `jdbc:postgresql://...` do passo 1 |
    | `DB_USER` | usuário do Neon |
    | `DB_PASSWORD` | senha do Neon |
-   | `JWT_SEGREDO` | um texto aleatório com 40+ caracteres (não reutilize senhas) |
+   | `JWT_SEGREDO` | **obrigatória**: um texto aleatório com 40+ caracteres (não reutilize senhas) |
    | `ADMIN_EMAIL` | o e-mail que você vai usar no painel |
-   | `ADMIN_SENHA` | uma senha forte para o painel |
+   | `ADMIN_SENHA` | **obrigatória**: uma senha forte para o painel (não pode ser `admin123`) |
+
+   Sem `JWT_SEGREDO` e `ADMIN_SENHA` próprios, a API **se recusa a subir** (os valores de exemplo só valem com o perfil `dev`, no seu computador). Não defina `SPRING_PROFILES_ACTIVE` como `dev`, `test` ou `docker` no Render. Para gerar um segredo: `openssl rand -base64 48`.
    | `CORS_ORIGENS` | deixe `http://localhost:5173` por enquanto — você troca no passo 4 |
    | `NOME_NEGOCIO` | o nome que aparece nos e-mails |
 
@@ -103,4 +105,5 @@ Salve; o Render reinicia a API sozinho. Pronto: abra o endereço da Vercel e fa�
 - **Lembretes na véspera:** rodam todo dia às 18h, mas no plano gratuito do Render a API dorme quando ninguém usa — se ela estiver dormindo nesse horário, o lembrete do dia não sai. Para garantir, use um serviço gratuito de "ping" (como cron-job.org) que acesse `https://agendamento-api-xxxx.onrender.com/api/servicos` a cada 10 minutos entre 17h e 19h, ou passe a API para um plano pago.
 - Problemas comuns:
   - **Front-end mostra "Sem conexão"**: a API pode estar acordando (espere 1 minuto e tente de novo) ou o `CORS_ORIGENS` não bate exatamente com o endereço da Vercel.
-  - **Deploy da API falha no início**: confira `DB_URL` (precisa começar com `jdbc:`) e se `JWT_SEGREDO` tem pelo menos 32 caracteres.
+  - **Deploy da API falha no início**: confira `DB_URL` (precisa começar com `jdbc:`), se `JWT_SEGREDO` tem pelo menos 32 caracteres e se `JWT_SEGREDO` e `ADMIN_SENHA` foram definidos (o log mostra "A API não sobe com..." quando falta um deles).
+  - **Login responde "Muitas tentativas"**: depois de 5 senhas erradas em 15 minutos o login fica bloqueado até a janela passar. Reiniciar a API também zera o bloqueio (ele fica só na memória).

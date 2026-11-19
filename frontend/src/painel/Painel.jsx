@@ -40,10 +40,10 @@ export default function Painel() {
     setSessao(null)
   }
 
-  const expirou = useCallback(() => {
+  const expirou = useCallback((mensagem) => {
     apagarSessao()
     setSessao(null)
-    setAviso('Sua sessão expirou. Entre de novo para continuar.')
+    setAviso(typeof mensagem === 'string' ? mensagem : 'Sua sessão expirou. Entre de novo para continuar.')
   }, [])
 
   const abas = sessao ? ABAS.filter((a) => a.perfis.includes(sessao.perfil)) : []

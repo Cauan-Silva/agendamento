@@ -13,7 +13,7 @@ import java.util.List;
 
 /**
  * Transforma o token em um usuário do painel, consultando o banco a cada requisição.
- * Assim, desativar alguém ou mudar o perfil vale na hora, sem esperar o token expirar.
+ * Assim, desativar alguém, mudar o perfil ou trocar a senha vale na hora, sem esperar o token expirar.
  */
 public class ConversorJwt implements Converter<Jwt, AbstractAuthenticationToken> {
 
@@ -34,6 +34,12 @@ public class ConversorJwt implements Converter<Jwt, AbstractAuthenticationToken>
         Usuario usuario = repository.buscarComProfissional(numero.longValue())
                 .filter(Usuario::isAtivo)
                 .orElseThrow(() -> new InvalidBearerTokenException("Usuário desativado ou removido"));
+
+        // Tokens de antes da versão no token não têm "ver": valem como versão 0.
+        int versao = jwt.getClaims().get("ver") instanceof Number v ? v.intValue() : 0;
+        if (versao != usuario.getVersaoToken()) {
+            throw new InvalidBearerTokenException("A senha foi trocada. Entre de novo.");
+        }
 
         Perfil perfil = usuario.getPerfil();
         Long profissionalId = usuario.getProfissional() == null ? null : usuario.getProfissional().getId();
