@@ -91,7 +91,9 @@ public class UsuarioService {
     /** O administrador define uma senha nova (ex.: alguém esqueceu a sua). */
     @Transactional
     public void redefinirSenha(Long id, String novaSenha) {
-        obter(id).setSenhaHash(passwordEncoder.encode(novaSenha));
+        Usuario usuario = obter(id);
+        usuario.setSenhaHash(passwordEncoder.encode(novaSenha));
+        usuario.invalidarTokens();
     }
 
     /** A própria pessoa troca a senha, confirmando a atual. */
@@ -102,6 +104,7 @@ public class UsuarioService {
             throw new RegraNegocioException("A senha atual não confere");
         }
         usuario.setSenhaHash(passwordEncoder.encode(novaSenha));
+        usuario.invalidarTokens(); // inclusive o desta sessão: a pessoa entra de novo com a senha nova
     }
 
     /**

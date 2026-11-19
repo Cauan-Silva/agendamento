@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -20,6 +21,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.hamcrest.Matchers.containsString;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -31,6 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
+@ActiveProfiles("test") // aceita o segredo JWT e a senha do admin padrão (só para teste)
 @EnabledIfEnvironmentVariable(named = "DB_URL", matches = ".+")
 class IntegracaoTest {
 
@@ -105,6 +109,20 @@ class IntegracaoTest {
     }
 
     @Test
+    void muitasSenhasErradasBloqueiamOLoginPorUmTempo() throws Exception {
+        String errada = """
+                {"email": "alvo@agendamento.local", "senha": "chute"}""";
+        for (int i = 0; i < 5; i++) {
+            mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON).content(errada))
+                    .andExpect(status().isUnauthorized());
+        }
+        mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON).content(errada))
+                .andExpect(status().isTooManyRequests())
+                .andExpect(header().exists("Retry-After"))
+                .andExpect(jsonPath("$.detail").value(containsString("Muitas tentativas")));
+    }
+
+    @Test
     void administradorEntraEVeAAgenda() throws Exception {
         String token = entrar("admin@agendamento.local", "admin123");
         mvc.perform(get("/api/agendamentos?data=" + segundaFutura(1)).header("Authorization", "Bearer " + token))
@@ -152,14 +170,26 @@ class IntegracaoTest {
         mvc.perform(get("/api/relatorios/mensal?ano=2026&mes=10").header("Authorization", "Bearer " + ana))
                 .andExpect(status().isForbidden());
 
-        // Troca a própria senha.
+        // Troca a própria senha: o token antigo para de valer e ela entra com a nova.
         mvc.perform(patch("/api/auth/senha").header("Authorization", "Bearer " + ana)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"senhaAtual\": \"senha-da-ana\", \"novaSenha\": \"outra-senha\"}"))
                 .andExpect(status().isNoContent());
         mvc.perform(get("/api/auth/eu").header("Authorization", "Bearer " + ana))
+                .andExpect(status().isUnauthorized());
+        ana = entrar("ana@barbearia.com", "outra-senha");
+        mvc.perform(get("/api/auth/eu").header("Authorization", "Bearer " + ana))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.perfil").value("PROFISSIONAL"));
+
+        // Senha redefinida pelo administrador: o token que ela tinha também para de valer.
+        mvc.perform(patch("/api/usuarios/" + idLoginAna + "/senha").header("Authorization", "Bearer " + admin)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"novaSenha\": \"senha-nova-da-ana\"}"))
+                .andExpect(status().isNoContent());
+        mvc.perform(get("/api/auth/eu").header("Authorization", "Bearer " + ana))
+                .andExpect(status().isUnauthorized());
+        ana = entrar("ana@barbearia.com", "senha-nova-da-ana");
 
         // Desativada pelo administrador: o token que ela já tinha para de valer na hora.
         String desativar = """

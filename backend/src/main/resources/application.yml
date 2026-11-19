@@ -1,6 +1,12 @@
 spring:
   application:
     name: agendamento-api
+  # Perfis de desenvolvimento: "dev" (e "test", nos testes) aceitam o JWT_SEGREDO e o ADMIN_SENHA
+  # de exemplo abaixo. Sem eles (produção), a API não sobe com esses valores.
+  # "docker" é o banco local do docker-compose, então também liga o "dev".
+  profiles:
+    group:
+      docker: dev
   datasource:
     # Padrão: PostgreSQL instalado na máquina, porta 5432.
     # Com Docker, rode com o perfil "docker" (porta 5433). Em produção, use as variáveis de ambiente.
@@ -41,10 +47,12 @@ agenda:
   cors-origens: ${CORS_ORIGENS:http://localhost:5173}
   jwt:
     # Em produção, defina JWT_SEGREDO com pelo menos 32 caracteres aleatórios.
+    # O valor abaixo só é aceito com o perfil "dev"/"test" (veja VerificadorSegredos).
     segredo: ${JWT_SEGREDO:segredo-de-desenvolvimento-troque-em-producao-123}
     validade-horas: 12
   admin:
     # Usuário criado automaticamente se ainda não existir nenhum.
+    # Em produção, ADMIN_SENHA é obrigatória (a padrão admin123 só vale com o perfil "dev"/"test").
     nome: ${ADMIN_NOME:Dono}
     email: ${ADMIN_EMAIL:admin@agendamento.local}
     senha: ${ADMIN_SENHA:admin123}

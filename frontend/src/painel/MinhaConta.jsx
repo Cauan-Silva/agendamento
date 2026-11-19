@@ -8,12 +8,10 @@ const PERFIS = { ADMIN: 'Administrador', PROFISSIONAL: 'Profissional' }
 export default function MinhaConta({ token, sessao, onSessaoExpirada }) {
   const [form, setForm] = useState({ atual: '', nova: '', repetir: '' })
   const [salvando, setSalvando] = useState(false)
-  const [sucesso, setSucesso] = useState(false)
   const [erro, setErro, tratarErro] = useErroPainel(onSessaoExpirada)
 
   async function salvar(evento) {
     evento.preventDefault()
-    setSucesso(false)
     if (form.nova !== form.repetir) {
       setErro('A nova senha e a repetição estão diferentes.')
       return
@@ -22,8 +20,9 @@ export default function MinhaConta({ token, sessao, onSessaoExpirada }) {
     setErro(null)
     try {
       await api.trocarMinhaSenha(form.atual, form.nova, token)
-      setForm({ atual: '', nova: '', repetir: '' })
-      setSucesso(true)
+      // A API derruba todos os tokens deste login (inclusive o atual): volta para o login.
+      onSessaoExpirada('Senha trocada. Entre de novo com a nova senha.')
+      return
     } catch (e) {
       // 401 aqui seria sessão expirada; senha atual errada volta como 422
       tratarErro(e)
@@ -57,11 +56,6 @@ export default function MinhaConta({ token, sessao, onSessaoExpirada }) {
       {erro && (
         <p className="aviso aviso--alerta" role="alert">
           {erro}
-        </p>
-      )}
-      {sucesso && (
-        <p className="aviso" role="status">
-          Senha trocada. Use a nova no próximo login.
         </p>
       )}
 

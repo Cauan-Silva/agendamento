@@ -43,9 +43,7 @@ public class InicializadorAdmin implements ApplicationRunner {
             return;
         }
         repository.save(new Usuario(nome, email.trim().toLowerCase(), passwordEncoder.encode(senha)));
+        // A senha padrão (admin123) só chega aqui com o perfil dev/test: veja VerificadorSegredos.
         log.info("Usuário do painel criado: {}", email);
-        if ("admin123".equals(senha)) {
-            log.warn("Usando a senha padrão do painel. Defina ADMIN_SENHA antes de publicar a aplicação.");
-        }
     }
 }

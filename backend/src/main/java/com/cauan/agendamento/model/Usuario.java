@@ -42,6 +42,10 @@ public class Usuario {
     @JoinColumn(name = "profissional_id")
     private Profissional profissional;
 
+    /** Vai no token (claim "ver"); muda quando a senha muda, derrubando os tokens antigos. */
+    @Column(name = "versao_token", nullable = false)
+    private int versaoToken;
+
     public Usuario() {
     }
 
@@ -54,6 +58,13 @@ public class Usuario {
     public boolean isAdmin() {
         return perfil == Perfil.ADMIN;
     }
+
+    /** Senha nova: todos os tokens já emitidos para este login deixam de valer. */
+    public void invalidarTokens() {
+        versaoToken++;
+    }
+
+    public int getVersaoToken() { return versaoToken; }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
