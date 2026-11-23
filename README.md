@@ -60,9 +60,11 @@ docker compose up -d
 
 ```bash
 cd backend
-mvn spring-boot:run                                  # PostgreSQL instalado
-mvn spring-boot:run -Dspring-boot.run.profiles=docker  # banco do Docker
+mvn spring-boot:run                                  # PostgreSQL instalado (perfil dev)
+mvn spring-boot:run -Dspring-boot.run.profiles=docker  # banco do Docker (inclui o perfil dev)
 ```
+
+O perfil `dev` (ligado automaticamente pelo `mvn spring-boot:run`, pelo perfil `docker` e pelo `launch.json` do VS Code) é o único que aceita o `JWT_SEGREDO` e o `ADMIN_SENHA` de exemplo. Rodando o `.jar` sem perfil, como em produção, a API se recusa a subir até você definir os dois (veja [docs/DEPLOY.md](docs/DEPLOY.md)).
 
 A API sobe em `http://localhost:8080`; a documentação interativa fica em `http://localhost:8080/swagger-ui.html`. As tabelas e alguns dados de exemplo (3 serviços e 2 profissionais) são criados automaticamente.
 
@@ -75,7 +77,7 @@ npm install
 npm run dev
 ```
 
-Abra `http://localhost:5173`. O painel fica em `http://localhost:5173/#/painel`, com o login padrão de desenvolvimento **admin@agendamento.local / admin123** (troque com `ADMIN_EMAIL` e `ADMIN_SENHA`).
+Abra `http://localhost:5173`. O painel fica em `http://localhost:5173/#/painel`, com o login padrão de desenvolvimento **admin@agendamento.local / admin123** (troque com `ADMIN_EMAIL` e `ADMIN_SENHA`). Depois de 5 senhas erradas seguidas para o mesmo e-mail (do mesmo IP) em 15 minutos, o login fica bloqueado até a janela passar (HTTP 429). Trocar ou redefinir a senha derruba os tokens já emitidos para aquele login.
 
 ### Testes
 

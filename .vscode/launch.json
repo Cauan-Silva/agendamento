@@ -6,7 +6,8 @@
       "name": "Rodar API de agendamento",
       "request": "launch",
       "mainClass": "com.cauan.agendamento.AgendamentoApplication",
-      "projectName": "agendamento-api"
+      "projectName": "agendamento-api",
+      "args": "--spring.profiles.active=dev"
     }
   ]
 }

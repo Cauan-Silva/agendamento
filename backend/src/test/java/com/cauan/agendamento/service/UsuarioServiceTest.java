@@ -131,5 +131,29 @@ class UsuarioServiceTest {
                 .isInstanceOf(RegraNegocioException.class)
                 .hasMessageContaining("senha atual");
         assertThat(dono.getSenhaHash()).isEqualTo("hash");
+        assertThat(dono.getVersaoToken()).isZero();
+    }
+
+    @Test
+    void trocarAPropriaSenhaDerrubaOsTokensAntigos() {
+        when(repository.buscarComProfissional(10L)).thenReturn(Optional.of(dono));
+        when(passwordEncoder.matches("atual", "hash")).thenReturn(true);
+        when(passwordEncoder.encode("nova-senha")).thenReturn("hash-novo");
+
+        service.trocarPropriaSenha(10L, "atual", "nova-senha");
+
+        assertThat(dono.getSenhaHash()).isEqualTo("hash-novo");
+        assertThat(dono.getVersaoToken()).isEqualTo(1);
+    }
+
+    @Test
+    void senhaRedefinidaPeloAdministradorDerrubaOsTokensAntigos() {
+        when(repository.buscarComProfissional(10L)).thenReturn(Optional.of(dono));
+        when(passwordEncoder.encode("nova-senha")).thenReturn("hash-novo");
+
+        service.redefinirSenha(10L, "nova-senha");
+
+        assertThat(dono.getSenhaHash()).isEqualTo("hash-novo");
+        assertThat(dono.getVersaoToken()).isEqualTo(1);
     }
 }

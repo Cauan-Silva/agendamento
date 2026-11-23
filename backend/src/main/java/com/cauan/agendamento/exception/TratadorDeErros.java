@@ -1,7 +1,9 @@
 package com.cauan.agendamento.exception;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -39,6 +41,14 @@ public class TratadorDeErros {
     @ExceptionHandler(CredenciaisInvalidasException.class)
     public ProblemDetail credenciais(CredenciaisInvalidasException e) {
         return problema(HttpStatus.UNAUTHORIZED, "Login inválido", e.getMessage());
+    }
+
+    @ExceptionHandler(MuitasTentativasException.class)
+    public ResponseEntity<ProblemDetail> muitasTentativas(MuitasTentativasException e) {
+        long segundos = Math.max(1, e.getEspera().toSeconds());
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header(HttpHeaders.RETRY_AFTER, String.valueOf(segundos))
+                .body(problema(HttpStatus.TOO_MANY_REQUESTS, "Muitas tentativas", e.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

@@ -7,6 +7,7 @@ import com.cauan.agendamento.dto.UsuarioDtos.UsuarioResponse;
 import com.cauan.agendamento.security.AuthService;
 import com.cauan.agendamento.security.UsuarioAutenticado;
 import com.cauan.agendamento.service.UsuarioService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -32,8 +33,9 @@ public class AuthController {
 
     /** Ex.: POST /api/auth/login  { "email": "admin@agendamento.local", "senha": "admin123" } */
     @PostMapping("/login")
-    public LoginResponse entrar(@Valid @RequestBody LoginRequest req) {
-        return authService.entrar(req);
+    public LoginResponse entrar(@Valid @RequestBody LoginRequest req, HttpServletRequest requisicao) {
+        // IP da conexão (não confiamos em X-Forwarded-For, que o cliente pode inventar)
+        return authService.entrar(req, requisicao.getRemoteAddr());
     }
 
     /** Dados de quem está logado. */
